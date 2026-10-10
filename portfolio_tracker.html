@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portfolio Tracker</title>
+<style>
+:root{--bg:#0f1117;--surface:#181c27;--surface2:#1f2436;--border:#2a3050;--accent:#4f8ef7;--warn:#e8a838;--danger:#e85c5c;--green:#4caf87;--text:#e8eaf0;--muted:#7a8099;--s1:#4f8ef7;--s2:#e8a838;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+header{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;}
+header h1{font-size:18px;font-weight:700;}
+header p{color:var(--muted);font-size:11px;margin-top:2px;}
+.tabs{display:flex;gap:3px;padding:12px 24px 0;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);border:1px solid transparent;border-bottom:none;white-space:nowrap;}
+.tab.active{background:var(--surface);color:var(--text);border-color:var(--border);margin-bottom:-1px;}
+.page{display:none;padding:20px 24px;}
+.page.active{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.kpi label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.kpi .val{font-size:20px;font-weight:700;margin-top:3px;}
+.kpi .sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.sec-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;margin-top:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+.card-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 14px 0;}
+table{width:100%;border-collapse:collapse;}
+th{padding:9px 12px;text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2);}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.b-high{background:rgba(232,88,88,.15);color:var(--danger);}
+.b-mid{background:rgba(232,168,56,.15);color:var(--warn);}
+.b-low{background:rgba(76,175,135,.15);color:var(--green);}
+.c-green{color:var(--green);} .c-danger{color:var(--danger);} .c-warn{color:var(--warn);} .c-accent{color:var(--accent);} .c-muted{color:var(--muted);}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.bar-name{width:150px;font-size:11px;color:var(--muted);flex-shrink:0;line-height:1.3;}
+.bar-track{flex:1;background:var(--surface2);border-radius:3px;height:16px;position:relative;}
+.bar-fill{height:100%;border-radius:3px;}
+.bar-label{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:600;color:var(--text);}
+.target-mark{position:absolute;top:0;height:100%;width:2px;background:var(--danger);opacity:.8;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.ldot{width:9px;height:9px;border-radius:2px;}
+.info-box{background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:7px;padding:10px 13px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.info-box strong{color:var(--accent);}
+.country-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.country-name{width:140px;font-size:11px;flex-shrink:0;}
+.country-track{flex:1;background:var(--surface2);border-radius:3px;height:14px;}
+.country-fill{height:100%;border-radius:3px;}
+.country-pct{width:44px;font-size:11px;font-weight:600;text-align:right;}
+.country-eur{width:60px;font-size:10px;color:var(--muted);text-align:right;}
+.country-group-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 7px;}
+.period-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.period-btn{padding:5px 12px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;}
+.period-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.etf-growth-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;}
+.etf-growth-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.etf-growth-name{font-size:13px;font-weight:600;}
+.etf-growth-val{font-size:18px;font-weight:700;}
+.growth-track{background:var(--surface2);border-radius:3px;height:7px;margin-top:7px;}
+.growth-fill{height:100%;border-radius:3px;background:var(--green);}
+.growth-fill.neg{background:var(--danger);}
+.etf-growth-meta{display:flex;gap:16px;margin-top:7px;flex-wrap:wrap;}
+.etf-growth-meta span{font-size:10px;color:var(--muted);}
+.etf-growth-meta strong{color:var(--text);}
+.pscard{background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(76,175,135,.05));border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;}
+.pscard-item label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.pscard-item .big{font-size:22px;font-weight:700;margin-top:2px;}
+.pscard-item .small{font-size:10px;color:var(--muted);margin-top:1px;}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px;}
+.form-card h3{font-size:13px;font-weight:600;margin-bottom:12px;}
+.field label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;color:var(--text);font-size:13px;outline:none;}
+.field input:focus{border-color:var(--accent);}
+.finput{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:12px;outline:none;width:100%;}
+.finput:focus{border-color:var(--accent);}
+.btn{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:500;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.btn-danger-sm{background:rgba(232,88,88,.12);color:var(--danger);border:1px solid rgba(232,88,88,.25);border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;}
+.snap-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;}
+.snap-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.snap-date{font-size:12px;font-weight:600;}
+.snap-total{font-size:17px;font-weight:700;color:var(--accent);}
+.snap-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.pill{font-size:10px;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--muted);}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.sim-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.sim-card h3{font-size:13px;font-weight:600;margin-bottom:12px;}
+.sim-etf-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.sim-result{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;}
+.sim-result h3{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sim-cmp-row{display:grid;grid-template-columns:150px 1fr 70px 70px 60px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.sim-cmp-row.hdr{font-size:10px;color:var(--muted);text-transform:uppercase;padding-bottom:7px;}
+.sim-cmp-row:last-child{border-bottom:none;}
+.sim-bar{background:var(--surface2);border-radius:3px;height:13px;position:relative;}
+.sim-bar-b{position:absolute;top:0;left:0;height:100%;border-radius:3px;background:var(--muted);opacity:.35;}
+.sim-bar-a{position:absolute;top:0;left:0;height:100%;border-radius:3px;opacity:.85;}
+.sim-bar-lim{position:absolute;top:0;height:100%;width:2px;background:var(--danger);opacity:.8;}
+.ok-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;background:rgba(76,175,135,.15);color:var(--green);}
+.warn-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;background:rgba(232,88,88,.15);color:var(--danger);}
+.warn-box{background:rgba(232,168,56,.08);border:1px solid rgba(232,168,56,.2);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--warn);margin-bottom:12px;}
+.clim{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 7px;color:var(--text);font-size:11px;outline:none;width:70px;}
+.clim:focus{border-color:var(--accent);}
+.csel{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 7px;color:var(--text);font-size:11px;outline:none;cursor:pointer;}
+.csel:focus{border-color:var(--accent);}
+.lim-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.lim-row:last-child{border-bottom:none;}
+.lim-label{color:var(--muted);flex:1;}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--green);color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;}
+.no-data{text-align:center;padding:40px;color:var(--muted);}
+.delta-pos{color:var(--green);}
+.delta-neg{color:var(--danger);}
+
+@media(max-width:768px){
+  /* Base layout */
+  body{font-size:13px;}
+  header{padding:12px 14px 10px;flex-direction:column;align-items:flex-start;gap:4px;}
+  header h1{font-size:16px;}
+
+  /* Tabs - large touch targets for mobile */
+  .tabs{
+    padding:0;
+    gap:0;
+    border-bottom:2px solid var(--border);
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    background:var(--surface);
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    padding:14px 16px;
+    font-size:13px;
+    font-weight:500;
+    border-radius:0;
+    border:none;
+    border-bottom:3px solid transparent;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .tab.active{
+    background:var(--surface);
+    color:var(--accent);
+    border-bottom:3px solid var(--accent);
+    margin-bottom:0;
+  }
+
+  /* Pages */
+  .page{padding:12px 14px;}
+
+  /* KPI rows - 2 columns on mobile */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi{padding:10px 12px;}
+  .kpi .val{font-size:16px;}
+  .kpi .sub{font-size:9px;}
+
+  /* Hero Gesamtbild - single column */
+  .page > div[style*="linear-gradient"] > div[style*="grid"]{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+
+  /* Rendite 4er cards - 2x2 grid */
+  .page > div[style*="linear-gradient"] > div[style*="grid-template-columns:repeat(4"]{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+
+  /* Cards */
+  .card{border-radius:6px;}
+  .card-title{font-size:10px;padding:10px 12px 0;}
+
+  /* Tables - horizontal scroll */
+  .card > table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{font-size:11px;}
+  th,td{padding:7px 8px !important;white-space:nowrap;}
+
+  /* Bars */
+  .bar-name{width:90px;font-size:10px;}
+  .bar-track{min-width:80px;}
+  .bar-label{font-size:9px;}
+
+  /* Country rows */
+  .country-name{width:100px;font-size:10px;}
+  .country-pct{width:36px;font-size:10px;}
+  .country-eur{width:50px;font-size:9px;}
+
+  /* Section labels */
+  .sec-label{font-size:9px;margin-top:10px;margin-bottom:5px;}
+
+  /* Simulation */
+  .sim-grid{grid-template-columns:1fr;}
+  .sim-card{padding:12px;}
+  .sim-cmp-row{grid-template-columns:110px 1fr 50px 50px 44px;font-size:10px;}
+
+  /* Erfassen form */
+  .form-card{padding:12px;}
+  .form-card h3{font-size:12px;}
+  .finput{font-size:12px;padding:5px 7px;}
+
+  /* Erfassen table - scrollable */
+  .form-card > table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Entwicklung period buttons */
+  .period-bar{gap:4px;}
+  .period-btn{padding:4px 8px;font-size:10px;}
+
+  /* ETF growth cards */
+  .etf-growth-card{padding:10px;}
+  .etf-growth-name{font-size:12px;}
+  .etf-growth-val{font-size:16px;}
+  .etf-growth-meta{gap:8px;}
+  .etf-growth-meta span{font-size:9px;}
+
+  /* Snap cards */
+  .snap-card{padding:10px;}
+  .snap-date{font-size:11px;}
+  .snap-total{font-size:15px;}
+  .snap-pills{gap:3px;}
+  .pill{font-size:9px;padding:1px 5px;}
+
+  /* Info box */
+  .info-box{font-size:10px;padding:8px 10px;}
+
+  /* Lim rows in simulation */
+  .lim-row{font-size:10px;}
+  .clim{width:55px;padding:4px 5px;}
+
+  /* Screenshot/CSV buttons - stack vertically */
+  div[style*="display:flex"][style*="gap:10px"]{flex-direction:column !important;}
+}
+
+@media(max-width:400px){
+  .kpi-row{grid-template-columns:1fr;}
+  th,td{padding:5px 6px !important;}
+  .tab{padding:5px 8px;font-size:10px;}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Portfolio Tracker</h1>
+    <p>Tech S1/S2 · Regionen · Sektoren · Rendite nach Steuer</p>
+  </div>
+  <div id="hdr-date" style="font-size:11px;color:var(--muted);"></div>
+</header>
+<div class="tabs">
+  <div class="tab active" data-tab="analyse">Analyse</div>
+  <div class="tab" data-tab="entwicklung">Entwicklung</div>
+  <div class="tab" data-tab="vergleich">Vergleich</div>
+  <div class="tab" data-tab="simulation">Simulation</div>
+  <div class="tab" data-tab="erfassen">Erfassen</div>
+  <div class="tab" data-tab="verlauf">Verlauf</div>
+</div>
+<div id="tab-analyse" class="page active"></div>
+<div id="data-freshness-banner" style="display:none;margin:8px 12px;padding:10px 14px;background:rgba(232,168,56,.1);border:1px solid rgba(232,168,56,.35);border-radius:8px;font-size:11px;line-height:1.5;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"></div>
+<div style="margin:4px 12px 0;display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+  <div style="text-align:right">
+    <button id="btn-storage-reset" onclick="handleStorageReset()" style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.35);color:var(--danger,#e05c5c);padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600" title="L&ouml;scht nur den gespeicherten ETF-Aktualisierungsstempel und l&auml;dt den Tracker neu. Snapshots bleiben erhalten.">&#9888; Storage reparieren</button>
+    <div id="storage-reset-status" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
+  </div>
+  <div style="text-align:right">
+    <button id="btn-etf-update" onclick="handleEtfUpdate()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600">&#8635; ETF-Daten aktualisiert</button>
+    <div id="etf-update-status" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
+  </div>
+</div>
+<div id="tab-entwicklung" class="page"></div>
+<div id="tab-vergleich" class="page"></div>
+<div id="tab-simulation" class="page"></div>
+<div id="tab-erfassen" class="page"></div>
+<div id="tab-verlauf" class="page"></div>
+<div class="toast" id="toast"></div>
+<script>// ── CSV-BERECHNETE WERTE (TR-Export 06.09.2026) ──────────────────────
+var CSV_REALIZED_TOTAL   = 810.48;
+var CSV_ZINSEN_TOTAL     = 260.23;
+var CSV_DIVIDENDEN_TOTAL = 2.32;
+var CSV_KAPITAL_TOTAL    = 262.55;
+
+
+// ── DATA ─────────────────────────────────────────────────────────────
+const TAX = 0.26375;
+const TARGET_S1 = 20;
+
+const TECH = {
+  "IE00B4L5Y983":{s1:26.0,s2a:9.0},
+  "IE00B4K48X80":{s1:8.6,s2a:4.5},
+  "LU1681045370":{s1:22.4,s2a:10.2},
+  "IE00BSPLC520":{s1:24.7,s2a:9.1},
+  "LU1681039134":{s1:18.0,s2a:6.0},
+  "IE000X7DRW38":{s1:15.0,s2a:10.4},
+  "IE00BK5BR626":{s1:0,s2a:0},
+  "JE00B588CD74":{s1:0,s2a:0},
+  "US1491231015":{s1:0,s2a:0},
+};
+
+// Laenderdaten aktualisiert: 2026-10-10 (Quelle: justETF, finanzfluss.de, moneyfarm)
+const COUNTRY = {
+  "IE00B4L5Y983":{USA:72.8,Japan:5.9,Kanada:3.3,Australien:1.5,Europa:13.2,Sonstige:3.3},
+  "IE00B4K48X80":{Europa:100.0},
+  "LU1681045370":{EM:100.0},
+  "IE00BSPLC520":{USA:94.0,Sonstige:6.0},
+  "LU1681039134":{Japan:99.7,Sonstige:0.3},
+  "IE000X7DRW38":{Europa:50.0,Japan:18.7,Australien:6.0,Kanada:8.0,Sonstige:17.3},
+  "IE00BK5BR626":{USA:38.7,Japan:9.3,Europa:22.0,EM:11.0,Kanada:4.0,Australien:3.0,Sonstige:12.0},
+  "JE00B588CD74":{EM:100.0},
+  "US1491231015":{USA:100.0},
+};
+
+// Sektordaten aktualisiert: 2026-10-10
+const SECTORS = {
+  "IE00B4L5Y983":{IT:25.5,Finanzen:17.2,Industrie:11.8,Gesundheit:10.0,KonsumZykl:9.8,Komm:8.5,KonsumBasis:5.0,Energie:4.2,Rohstoffe:3.2,Versorger:2.6,Immobilien:2.2},
+  "IE00B4K48X80":{Finanzen:19.8,Industrie:15.8,Gesundheit:14.5,KonsumZykl:10.2,IT:10.0,KonsumBasis:8.0,Rohstoffe:6.5,Energie:6.0,Komm:4.5,Versorger:3.5,Immobilien:1.2},
+  "LU1681045370":{IT:24.0,Finanzen:20.5,Komm:10.5,KonsumZykl:10.0,KonsumBasis:5.8,Energie:5.0,Industrie:5.5,Rohstoffe:5.2,Gesundheit:4.0,Versorger:3.5,Immobilien:6.0},
+  "IE00BSPLC520":{Finanzen:18.5,IT:16.5,Gesundheit:10.8,Energie:8.5,Industrie:9.0,Komm:7.5,KonsumBasis:6.5,KonsumZykl:6.0,Rohstoffe:5.5,Versorger:5.8,Immobilien:5.4},
+  "LU1681039134":{Industrie:24.0,IT:20.0,KonsumZykl:14.0,Finanzen:13.0,Gesundheit:8.0,Rohstoffe:6.0,KonsumBasis:5.5,Komm:4.5,Energie:2.5,Versorger:1.5,Immobilien:1.0},
+  "IE000X7DRW38":{Finanzen:21.5,Gesundheit:15.0,Industrie:14.0,IT:13.0,KonsumBasis:9.5,KonsumZykl:7.5,Energie:7.0,Komm:5.0,Rohstoffe:4.0,Versorger:2.5,Immobilien:1.0},
+  "IE00BK5BR626":{IT:22.0,Finanzen:19.5,Gesundheit:11.5,Industrie:10.5,KonsumZykl:10.0,Komm:8.0,KonsumBasis:6.0,Energie:4.5,Rohstoffe:3.5,Versorger:2.5,Immobilien:2.0},
+  "JE00B588CD74":{IT:52.0,Finanzen:16.0,KonsumZykl:8.0,Industrie:6.0,KonsumBasis:5.0,Rohstoffe:4.0,Gesundheit:3.5,Energie:2.5,Komm:2.0,Versorger:0.5,Immobilien:0.5},
+  "US1491231015":{Industrie:100.0},
+};
+
+const SECTOR_COLORS = {
+  IT:'#4f8ef7',Komm:'#7c5cbf',Finanzen:'#4caf87',Gesundheit:'#e85c5c',
+  Industrie:'#e8a838',KonsumZykl:'#f7924f',KonsumBasis:'#a0c878',
+  Energie:'#c8a020',Rohstoffe:'#7a9aaa',Versorger:'#9a78c8',Immobilien:'#c87878'
+};
+const SECTOR_LABELS = {
+  IT:'Informationstechnologie',Komm:'Kommunikation',Finanzen:'Finanzen',
+  Gesundheit:'Gesundheitswesen',Industrie:'Industrie',KonsumZykl:'Konsumg. (zyklisch)',
+  KonsumBasis:'Basiskonsumg.',Energie:'Energie',Rohstoffe:'Rohstoffe',
+  Versorger:'Versorger',Immobilien:'Immobilien'
+};
+
+// Holdings aktualisiert: 2026-10-10 (Quelle: justETF Aug 2026)
+const HOLDINGS = {
+  // MSCI World (Stand 31.08.2026)
+  "IE00B4L5Y983":[
+    {n:"NVIDIA",t:"NVDA",p:5.58,s:"IT"},{n:"Apple",t:"AAPL",p:4.81,s:"IT"},
+    {n:"Microsoft",t:"MSFT",p:3.76,s:"IT"},{n:"Amazon",t:"AMZN",p:2.76,s:"KonsumZykl"},
+    {n:"Alphabet A",t:"GOOGL",p:2.16,s:"Komm"},{n:"Broadcom",t:"AVGO",p:2.02,s:"IT"},
+    {n:"Alphabet C",t:"GOOG",p:1.71,s:"Komm"},{n:"Meta",t:"META",p:1.40,s:"Komm"},
+    {n:"JPMorgan",t:"JPM",p:1.05,s:"Finanzen"},{n:"Eli Lilly",t:"LLY",p:1.04,s:"Gesundheit"},
+    {n:"Tesla",t:"TSLA",p:1.03,s:"KonsumZykl"},{n:"ASML",t:"ASML",p:0.77,s:"IT"},
+    {n:"Berkshire",t:"BRK.B",p:0.76,s:"Finanzen"},{n:"ExxonMobil",t:"XOM",p:0.71,s:"Energie"},
+    {n:"J&J",t:"JNJ",p:0.68,s:"Gesundheit"},{n:"Visa",t:"V",p:0.66,s:"Finanzen"},
+  ],
+  // MSCI Europe Top-Holdings (Stand 31.08.2026, justETF)
+  "IE00B4K48X80":[
+    {n:"ASML",t:"ASML",p:4.55,s:"IT"},{n:"HSBC",t:"HSBA",p:2.47,s:"Finanzen"},
+    {n:"Roche",t:"ROG",p:2.13,s:"Gesundheit"},{n:"Novartis",t:"NVS",p:1.94,s:"Gesundheit"},
+    {n:"Shell",t:"SHEL",p:1.75,s:"Energie"},{n:"Nestle",t:"NESN",p:1.75,s:"KonsumBasis"},
+    {n:"AstraZeneca",t:"AZN",p:1.70,s:"Gesundheit"},{n:"Siemens",t:"SIE",p:1.67,s:"Industrie"},
+    {n:"SAP",t:"SAP",p:1.56,s:"IT"},{n:"Banco Santander",t:"SAN",p:1.46,s:"Finanzen"},
+  ],
+  // MSCI EM Top-Holdings (Stand Aug 2026, TSMC/Samsung/Hynix dominant)
+  "LU1681045370":[
+    {n:"TSMC",t:"TSM",p:14.50,s:"IT"},{n:"Samsung",t:"005930",p:7.80,s:"IT"},
+    {n:"SK Hynix",t:"000660",p:6.60,s:"IT"},{n:"Tencent",t:"700",p:4.20,s:"Komm"},
+    {n:"Alibaba",t:"BABA",p:2.30,s:"KonsumZykl"},{n:"Reliance",t:"RELIANCE",p:1.85,s:"Energie"},
+    {n:"Infosys",t:"INFY",p:1.25,s:"IT"},{n:"Meituan",t:"3690",p:1.10,s:"KonsumZykl"},
+  ],
+  // MSCI USA Value (SPDR) Top-Holdings (Stand 31.08.2026, justETF)
+  "IE00BSPLC520":[
+    {n:"Micron Tech.",t:"MU",p:6.19,s:"IT"},{n:"Cisco",t:"CSCO",p:4.32,s:"IT"},
+    {n:"General Motors",t:"GM",p:3.99,s:"KonsumZykl"},{n:"QUALCOMM",t:"QCOM",p:3.93,s:"IT"},
+    {n:"HP Enterprise",t:"HPE",p:3.50,s:"IT"},{n:"Verizon",t:"VZ",p:3.02,s:"Komm"},
+    {n:"Adobe",t:"ADBE",p:2.82,s:"IT"},{n:"AT&T",t:"T",p:2.58,s:"Komm"},
+    {n:"Accenture",t:"ACN",p:2.54,s:"IT"},{n:"Merck",t:"MRK",p:2.27,s:"Gesundheit"},
+  ],
+  // Japan / Nikkei 400 Top-Holdings (Stand 31.08.2026, justETF)
+  "LU1681039134":[
+    {n:"Recruit Holdings",t:"6098",p:2.28,s:"Industrie"},{n:"Sony",t:"6758",p:1.75,s:"KonsumZykl"},
+    {n:"Hitachi",t:"6501",p:1.73,s:"Industrie"},{n:"MUFG",t:"8306",p:1.65,s:"Finanzen"},
+    {n:"ITOCHU",t:"8001",p:1.63,s:"KonsumBasis"},{n:"Mizuho",t:"8411",p:1.60,s:"Finanzen"},
+    {n:"Mitsui",t:"8031",p:1.60,s:"Rohstoffe"},{n:"Mitsubishi Corp",t:"8058",p:1.59,s:"Rohstoffe"},
+    {n:"SMFG",t:"8316",p:1.58,s:"Finanzen"},{n:"Advantest",t:"6857",p:1.54,s:"IT"},
+  ],
+  // Ex-USA Dividend Growth Top-Holdings (Stand 29.07.2026, justETF)
+  "IE000X7DRW38":[
+    {n:"Toyota",t:"7203",p:4.58,s:"KonsumZykl"},{n:"Inditex",t:"ITX",p:4.55,s:"KonsumZykl"},
+    {n:"BP",t:"BP",p:3.61,s:"Energie"},{n:"Novo Nordisk",t:"NOVO-B",p:3.17,s:"Gesundheit"},
+    {n:"ING Groep",t:"INGA",p:3.02,s:"Finanzen"},{n:"AstraZeneca",t:"AZN",p:2.89,s:"Gesundheit"},
+    {n:"GSK",t:"GSK",p:2.63,s:"Gesundheit"},{n:"Deutsche Telekom",t:"DTE",p:2.49,s:"Komm"},
+    {n:"Tokyo Electron",t:"8035",p:2.34,s:"IT"},{n:"Lloyds Banking",t:"LLOY",p:2.20,s:"Finanzen"},
+  ],
+  // FTSE All-World Top-Holdings (Stand 31.08.2026, justETF)
+  "IE00BK5BR626":[
+    {n:"JPMorgan",t:"JPM",p:2.13,s:"Finanzen"},{n:"ExxonMobil",t:"XOM",p:1.50,s:"Energie"},
+    {n:"J&J",t:"JNJ",p:1.44,s:"Gesundheit"},{n:"AbbVie",t:"ABBV",p:1.02,s:"Gesundheit"},
+    {n:"Cisco",t:"CSCO",p:0.98,s:"IT"},{n:"Bank of America",t:"BAC",p:0.92,s:"Finanzen"},
+    {n:"Chevron",t:"CVX",p:0.86,s:"Energie"},{n:"Merck",t:"MRK",p:0.82,s:"Gesundheit"},
+    {n:"HSBC",t:"HSBA",p:0.80,s:"Finanzen"},{n:"UnitedHealth",t:"UNH",p:0.79,s:"Gesundheit"},
+  ],
+  // EM ex-China ETF Top-Holdings (Stand 31.08.2026, justETF)
+  "JE00B588CD74":[
+    {n:"TSMC",t:"TSM",p:18.92,s:"IT"},{n:"Samsung",t:"005930",p:9.00,s:"IT"},
+    {n:"SK Hynix",t:"000660",p:6.85,s:"IT"},{n:"MediaTek",t:"2454",p:1.81,s:"IT"},
+    {n:"Delta Electronics",t:"2308",p:1.14,s:"IT"},{n:"Hon Hai",t:"2317",p:0.99,s:"IT"},
+    {n:"HDFC Bank",t:"HDFCBANK",p:0.87,s:"Finanzen"},{n:"ICICI Bank",t:"ICICIBANK",p:0.82,s:"Finanzen"},
+    {n:"Reliance",t:"RELIANCE",p:0.78,s:"Energie"},
+  ],
+};
+
+const PRIO = [
+  {v:'block',l:'Sperren',f:0,c:'var(--danger)'},
+  {v:'reduce',l:'Reduzieren',f:0.5,c:'var(--warn)'},
+  {v:'neutral',l:'Neutral',f:1,c:'var(--muted)'},
+  {v:'boost',l:'Foerdern',f:2,c:'var(--green)'},
+  {v:'strong',l:'Stark foerdern',f:3,c:'#4caf87'},
+];
+
+const PERIODS=[
+  {l:'1M',m:1},{l:'2M',m:2},{l:'3M',m:3},{l:'4M',m:4},
+  {l:'6M',m:6},{l:'8M',m:8},{l:'10M',m:10},{l:'12M',m:12},
+  {l:'2J',m:24},{l:'3J',m:36},{l:'5J',m:60},{l:'14J',m:168},
+];
+
+const SNAPSHOTS_DEFAULT = [
+  {date:"2026-06-19",note:"Periode 1",etfs:[
+    {name:"MSCI World",isin:"IE00B4L5Y983",wert:10549,gewinnPct:16.25,gewinnEur:1474,monate:18,einstand:10088.39,firstBuy:"2025-01-08"},
+    {name:"MSCI Europe",isin:"IE00B4K48X80",wert:4862,gewinnPct:13.05,gewinnEur:561,monate:9,einstand:4301,firstBuy:"2025-10-07"},
+    {name:"MSCI EM",isin:"LU1681045370",wert:4623,gewinnPct:15.70,gewinnEur:627,monate:9,einstand:3996,firstBuy:"2026-01-30"},
+    {name:"MSCI USA Value",isin:"IE00BSPLC520",wert:2261,gewinnPct:2.77,gewinnEur:60,monate:3,einstand:2201,firstBuy:"2026-04-08"},
+    {name:"Nikkei 400",isin:"LU1681039134",wert:1950,gewinnPct:6.23,gewinnEur:114,monate:4,einstand:1836,firstBuy:"2026-02-20"},
+    {name:"Ex USA Div",isin:"IE000X7DRW38",wert:1671,gewinnPct:3.70,gewinnEur:59,monate:5,einstand:1612.01,firstBuy:"2026-02-04"},
+    {name:"Caterpillar",isin:"US1491231015",wert:1090.02,gewinnPct:-2.33,gewinnEur:-26,monate:12,einstand:1116.02,firstBuy:"2025-06-01"},
+  ]},
+  {date:"2026-08-14",note:"Periode 2",etfs:[
+    {name:"MSCI World",isin:"IE00B4L5Y983",wert:10921,gewinnPct:20.36,gewinnEur:1847,monate:20,einstand:10088.39,firstBuy:"2025-01-08"},
+    {name:"MSCI Europe",isin:"IE00B4K48X80",wert:5055,gewinnPct:17.54,gewinnEur:754,monate:11,einstand:4301,firstBuy:"2025-10-07"},
+    {name:"MSCI EM",isin:"LU1681045370",wert:4377,gewinnPct:9.53,gewinnEur:380,monate:11,einstand:3997,firstBuy:"2026-01-30"},
+    {name:"MSCI USA Value",isin:"IE00BSPLC520",wert:2390,gewinnPct:8.60,gewinnEur:173,monate:5,einstand:2217,firstBuy:"2026-04-08"},
+    {name:"Nikkei 400",isin:"LU1681039134",wert:2011,gewinnPct:9.56,gewinnEur:175,monate:6,einstand:1836,firstBuy:"2026-02-20"},
+    {name:"Ex USA Div",isin:"IE000X7DRW38",wert:1716,gewinnPct:6.46,gewinnEur:104,monate:7,einstand:1612.01,firstBuy:"2026-02-04"},
+    {name:"Caterpillar",isin:"US1491231015",wert:1090.02,gewinnPct:-2.33,gewinnEur:-26,monate:15,einstand:1116.02,firstBuy:"2025-06-01"},
+  ]},
+];
+
+const CSV_IMPORT = {
+  "IE000X7DRW38":{isin:"IE000X7DRW38",name:"Ex USA Div Growth",netShares:58.083516,einstand:1612.01,avgPrice:27.75,firstBuy:"2026-02-04",monate:7},
+  "IE00B4K48X80":{isin:"IE00B4K48X80",name:"MSCI Europe",netShares:60.080071,einstand:4301,avgPrice:94.13,firstBuy:"2025-10-07",monate:11},
+  "IE00B4L5Y983":{isin:"IE00B4L5Y983",name:"MSCI World",netShares:93.287474,einstand:10088.39,avgPrice:108.14,firstBuy:"2025-01-08",monate:20},
+  "IE00BK5BR626":{isin:"IE00BK5BR626",name:"FTSE All-World Div",netShares:1.04344,einstand:100,avgPrice:95.86,firstBuy:"2026-09-01",monate:0},
+  "IE00BSPLC520":{isin:"IE00BSPLC520",name:"MSCI USA Value",netShares:26.847876,einstand:2201,avgPrice:81.98,firstBuy:"2026-04-08",monate:5},
+  "JE00B588CD74":{isin:"JE00B588CD74",name:"Physical Swiss Gold",netShares:1.809545,einstand:801,avgPrice:442.65,firstBuy:"2026-03-02",monate:6},
+  "LU1681039134":{isin:"LU1681039134",name:"Nikkei 400",netShares:4.252607,einstand:1836,avgPrice:431.74,firstBuy:"2026-02-20",monate:7},
+  "LU1681045370":{isin:"LU1681045370",name:"MSCI EM",netShares:677.125136,einstand:3997,avgPrice:7.04,firstBuy:"2026-01-30",monate:7},
+  "US1491231015":{isin:"US1491231015",name:"Caterpillar Inc.",netShares:4.0,einstand:1116.02,avgPrice:279.01,firstBuy:"2025-06-01",monate:15},
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────
+var snapshots = [];
+var manualData = {};
+var distMode = 'equal';
+var activePeriod = 0;
+
+// ── STORAGE ──────────────────────────────────────────────────────────
+async function sGet(key) {
+  try { if(window.storage && window.storage.get) { var r=await window.storage.get(key); if(r&&r.value) return r.value; } } catch(e){}
+  try { return localStorage.getItem(key); } catch(e){}
+  return null;
+}
+async function sSet(key,val) {
+  try { if(window.storage && window.storage.set) { await window.storage.set(key,val); return; } } catch(e){}
+  try { localStorage.setItem(key,val); } catch(e){}
+}
+// All historical storage keys - never remove old ones, only add new
+var ALL_SNAP_KEYS = [
+  'ptsnaps12','ptsnaps13','ptsnaps14','ptsnaps15','ptsnaps16',
+  'ptsnaps17','ptsnaps18','ptsnaps19','ptsnaps20','ptsnaps21',
+  'ptv1snaps','ptv2snaps','ptv3snaps','ptv4snaps','ptv5snaps',
+  'ptv6snaps','ptv7snaps','ptv8snaps','ptv9snaps','ptv10snaps',
+  'ptv11snaps','ptv12snaps','ptv13snaps','ptv14snaps','ptv15snaps',
+  'ptv16snaps',
+];
+var CURRENT_KEY = 'ptv16snaps';
+
+async function migrateSnapshots() {
+  // Search all historical keys for snapshots
+  var bestSnaps = null;
+  var bestCount = 0;
+  var bestKey = null;
+  for(var ki=0; ki<ALL_SNAP_KEYS.length; ki++) {
+    try {
+      var raw = await sGet(ALL_SNAP_KEYS[ki]);
+      if(!raw) continue;
+      var parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed)||!parsed.length) continue;
+      // Prefer the key with the most snapshots (most data)
+      if(parsed.length > bestCount) {
+        bestCount = parsed.length;
+        bestSnaps = parsed;
+        bestKey = ALL_SNAP_KEYS[ki];
+      }
+    } catch(e){}
+  }
+  if(bestSnaps && bestKey && bestKey !== CURRENT_KEY) {
+    console.log('Migrated '+bestCount+' snapshots from '+bestKey+' to '+CURRENT_KEY);
+    snapshots = bestSnaps;
+    await persist();
+    return true;
+  }
+  return false;
+}
+
+async function loadData() {
+  // First try current key
+  try {
+    var r = await sGet(CURRENT_KEY);
+    if(r) {
+      var p = JSON.parse(r);
+      if(Array.isArray(p) && p.length) {
+        snapshots = p;
+        return;
+      }
+    }
+  } catch(e){}
+  // Try migration from any historical key
+  var migrated = await migrateSnapshots();
+  if(migrated) return;
+  // Fall back to seed data
+  snapshots = JSON.parse(JSON.stringify(SNAPSHOTS_DEFAULT));
+  await persist();
+}
+async function persist() { try { await sSet(CURRENT_KEY,JSON.stringify(snapshots)); } catch(e){} }
+async function getDataAge(){ try{ var d=await sGet('ptv16dataUpdated'); return d?new Date(d):null; }catch(e){return null;} }
+async function markDataUpdated(){ try{ await sSet('ptv16dataUpdated',new Date().toISOString()); }catch(e){} }
+var ALL_MANUAL_KEYS = [
+  'ptmanual','ptv1manual','ptv2manual','ptv3manual','ptv4manual',
+  'ptv5manual','ptv6manual','ptv7manual','ptv8manual','ptv9manual',
+  'ptv10manual','ptv11manual','ptv12manual','ptv13manual','ptv14manual',
+  'ptv15manual','ptv16manual',
+];
+var CURRENT_MANUAL_KEY = 'ptv16manual';
+
+async function loadManual() {
+  // Try current key first
+  try { var r=await sGet(CURRENT_MANUAL_KEY); if(r){manualData=JSON.parse(r);return;} } catch(e){}
+  // Try all historical manual keys
+  for(var ki=0;ki<ALL_MANUAL_KEYS.length;ki++) {
+    try {
+      var raw=await sGet(ALL_MANUAL_KEYS[ki]);
+      if(!raw) continue;
+      var parsed=JSON.parse(raw);
+      if(parsed&&Object.keys(parsed).length) {
+        manualData=parsed;
+        await saveManual();
+        console.log('Migrated manual data from '+ALL_MANUAL_KEYS[ki]);
+        return;
+      }
+    } catch(e){}
+  }
+}
+async function saveManual() { try { await sSet(CURRENT_MANUAL_KEY,JSON.stringify(manualData)); } catch(e){} }
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function fmt(n) { return (Math.round(n)||0).toLocaleString('de-DE')+'€'; }
+function fmtP(n) { return (n>=0?'+':'')+n.toFixed(2)+'%'; }
+function fmtA(n) { return (n>=0?'▲ +':'▼ ')+fmt(Math.abs(n)); }
+function toast(msg,err) {
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=err?'var(--danger)':'var(--green)';
+  t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+// ── CALCULATIONS ─────────────────────────────────────────────────────
+function calcSnap(snap) {
+  if(!snap||!snap.etfs||!snap.etfs.length) return {total:0,s1pct:0,s2pct:0,s1eur:0,s2eur:0,gewinnEur:0,einstand:0,cagr:0,avgMonate:0,steuer:0,netto:0,nettoPct:0,gesamtPct:0};
+  var etfs=snap.etfs;
+  var total=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var s1eur=0,s2eur=0,gewinnEur=0,einstandSum=0,mSum=0;
+  var today=new Date();
+  etfs.forEach(function(e){
+    var t=TECH[e.isin]||{s1:0,s2a:0};
+    s1eur+=e.wert*t.s1/100; s2eur+=e.wert*(t.s1+t.s2a)/100;
+    // Use gewinnEur directly (entered from TR app) as source of truth
+    // Use gewinnEur directly as entered from TR - no recalculation
+    var gEur = e.gewinnEur !== undefined && e.gewinnEur !== 0 ? e.gewinnEur
+               : e.gewinnPct ? e.wert * e.gewinnPct / (100 + e.gewinnPct) : 0;
+    var eStand = e.wert - gEur;
+    gewinnEur += gEur;
+    einstandSum += eStand > 0 ? eStand : 0;
+    var m = e.firstBuy ? ((today-new Date(e.firstBuy))/(1000*60*60*24*30.44)) : (e.monate||0);
+    if(m < 0.5) m = 0.5;
+    mSum+=(e.wert/total)*m;
+  });
+  var steuer=gewinnEur>0?gewinnEur*TAX:0;
+  var netto=gewinnEur-steuer;
+  var gesamtPct=einstandSum>0?gewinnEur/einstandSum*100:0;
+  var nettoPct=einstandSum>0?netto/einstandSum*100:0;
+  var cagr=einstandSum>0&&mSum>0?(Math.pow((einstandSum+gewinnEur)/einstandSum,12/mSum)-1)*100:0;
+  return {total:total,s1pct:s1eur/total*100,s2pct:s2eur/total*100,s1eur:s1eur,s2eur:s2eur,
+    gewinnEur:gewinnEur,einstand:einstandSum,cagr:cagr,avgMonate:mSum,
+    steuer:steuer,netto:netto,nettoPct:nettoPct,gesamtPct:gesamtPct};
+}
+
+function calcGeo(etfs) {
+  var total=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var res={USA:0,Europa:0,Japan:0,China:0,EM_Rest:0,Kanada:0,Australien:0,Sonstige:0};
+  etfs.forEach(function(e){
+    var cd=COUNTRY[e.isin]; if(!cd) return;
+    var w=e.wert/total;
+    if(cd.USA)       res.USA       += w*cd.USA;
+    if(cd.Europa)    res.Europa    += w*cd.Europa;
+    if(cd.Japan)     res.Japan     += w*cd.Japan;
+    if(cd.Kanada)    res.Kanada    += w*cd.Kanada;
+    if(cd.Australien)res.Australien+= w*cd.Australien;
+    if(cd.Sonstige)  res.Sonstige  += w*cd.Sonstige;
+    if(cd.EM) {
+      // split EM: ~30% China, ~70% rest (India, SE-Asia, Brazil, etc.)
+      res.China   += w*cd.EM*0.30;
+      res.EM_Rest += w*cd.EM*0.70;
+    }
+  });
+  return res;
+}
+
+function calcSectors(etfs) {
+  var total=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var res={};
+  etfs.forEach(function(e){
+    var sd=SECTORS[e.isin]; if(!sd) return;
+    var w=e.wert/total;
+    Object.keys(sd).forEach(function(k){ res[k]=(res[k]||0)+w*sd[k]; });
+  });
+  return res;
+}
+
+function calcHoldings(etfs,n) {
+  var total=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var merged={};
+  etfs.forEach(function(e){
+    var hh=HOLDINGS[e.isin]||[]; var w=e.wert/total;
+    hh.forEach(function(h){
+      if(!merged[h.n]) merged[h.n]={n:h.n,t:h.t,s:h.s,pct:0,etfs:[]};
+      merged[h.n].pct+=h.p*w;
+      if(merged[h.n].etfs.indexOf(e.name)<0) merged[h.n].etfs.push(e.name);
+    });
+  });
+  return Object.values(merged).sort(function(a,b){return b.pct-a.pct;}).slice(0,n||30);
+}
+
+// ── TAB ROUTING ───────────────────────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active',el.getAttribute('data-tab')===t); });
+  document.querySelectorAll('.page').forEach(function(el){ el.classList.remove('active'); });
+  var pg=document.getElementById('tab-'+t);
+  if(pg) pg.classList.add('active');
+  if(t==='analyse') renderAnalyse();
+  else if(t==='entwicklung') renderEntwicklung();
+  else if(t==='vergleich') renderVergleich();
+  else if(t==='simulation') renderSimulation();
+  else if(t==='erfassen') renderErfassen();
+  else if(t==='verlauf') renderVerlauf();
+}
+
+// ── ANALYSE ───────────────────────────────────────────────────────────
+function renderAnalyse() {
+  var el=document.getElementById('tab-analyse');
+  if(!snapshots.length){el.innerHTML='<div class="no-data">Keine Daten. Bitte im Reiter Erfassen eintragen.</div>';return;}
+  // Check ETF data freshness (async, inject banner if stale)
+  getDataAge().then(function(lastUpdate){
+    var bannerEl=document.getElementById('data-freshness-banner');
+    var statusEl=document.getElementById('etf-update-status');
+    if(lastUpdate && statusEl) {
+      statusEl.textContent='Zuletzt aktualisiert: '+lastUpdate.toLocaleDateString('de-DE');
+    }
+    if(!bannerEl) return;
+    if(!lastUpdate) {
+      bannerEl.style.display='flex';
+      bannerEl.innerHTML='<span><span style="color:var(--warn)">&#9888; ETF-Daten noch nie aktualisiert.</span> Bitte aktuellen Tracker von Claude holen und erneut importieren.</span>';
+    } else {
+      var ageDays=Math.round((Date.now()-lastUpdate.getTime())/(1000*60*60*24));
+      if(ageDays>30) {
+        bannerEl.style.display='flex';
+        bannerEl.innerHTML='<span><span style="color:var(--warn)">&#9888; ETF-Daten sind <strong>'+ageDays+' Tage alt</strong> (Stand: '+lastUpdate.toLocaleDateString('de-DE')+').</span> Bitte aktualisierten Tracker von Claude holen.</span>';
+      } else {
+        bannerEl.style.display='none';
+      }
+    }
+  });
+  var snap=snapshots[snapshots.length-1];
+  var prev=snapshots.length>1?snapshots[snapshots.length-2]:null;
+  var c=calcSnap(snap); var cp=prev?calcSnap(prev):null;
+  var dTotal=cp?c.total-cp.total:null;
+  var dS1=cp?c.s1pct-cp.s1pct:null;
+  document.getElementById('hdr-date').textContent='Stand: '+snap.date+(snap.note?' · '+snap.note:'');
+
+  var h='';
+  // HERO: Gesamtbild
+  var trRef = 3504.03;
+  var gesamtBruttoHero  = c.gewinnEur + CSV_REALIZED_TOTAL + CSV_KAPITAL_TOTAL;
+  var bereitsGezahlt    = CSV_KAPITAL_TOTAL * TAX + CSV_REALIZED_TOTAL * TAX;
+  var ausstehend        = c.gewinnEur > 0 ? c.gewinnEur * TAX : 0;
+  var gesamtNettoHero   = gesamtBruttoHero - bereitsGezahlt - ausstehend;
+  var gEinstand         = c.einstand;
+  var gBruttoPct        = gEinstand>0 ? gesamtBruttoHero/gEinstand*100 : 0;
+  var gNettoPct         = gEinstand>0 ? gesamtNettoHero/gEinstand*100  : 0;
+  // Weighted CAGR: per position with own holding period, weighted by einstand
+  var today = new Date();
+  var totalEinstand = (snap.etfs||[]).reduce(function(a,e){
+    var gEur = e.gewinnEur !== undefined && e.gewinnEur !== 0 ? e.gewinnEur
+               : (e.gewinnPct ? e.wert*e.gewinnPct/(100+e.gewinnPct) : 0);
+    return a + (e.wert - gEur);
+  }, 0);
+
+  var gCagrB = 0, gCagrN = 0, portfolioMonate = 0;
+  (snap.etfs||[]).forEach(function(e){
+    if(!e.wert) return;
+    var gEur = e.gewinnEur !== undefined && e.gewinnEur !== 0 ? e.gewinnEur
+               : (e.gewinnPct ? e.wert*e.gewinnPct/(100+e.gewinnPct) : 0);
+    var eStand = e.wert - gEur;
+    if(eStand <= 0) return;
+    var monate = e.firstBuy ? (today-new Date(e.firstBuy))/(1000*60*60*24*30.44) : (e.monate||1);
+    if(monate < 0.5) monate = 0.5;
+    // Weight by einstand (capital invested), not current value
+    var weight = totalEinstand > 0 ? eStand / totalEinstand : 0;
+    var posCAGR_B = (Math.pow(e.wert/eStand, 12/monate) - 1) * 100;
+    var nettoGain = gEur - (gEur > 0 ? gEur * TAX : 0);
+    var posCAGR_N = (Math.pow((eStand+nettoGain)/eStand, 12/monate) - 1) * 100;
+    gCagrB += weight * posCAGR_B;
+    gCagrN += weight * posCAGR_N;
+    portfolioMonate += weight * monate;
+  });
+
+  var pmRound = Math.round(portfolioMonate);
+
+  // ── HERO BLOCK ──────────────────────────────────────────────
+  h+='<div style="background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(76,175,135,.06));border:1px solid rgba(79,142,247,.25);border-radius:14px;padding:20px;margin-bottom:20px">';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Gesamtergebnis · alle Zeitraume · alle Vorgange</div>';
+
+  // ── SECTION 1: Kapital & Depotwert ──────────────────────────
+  h+='<div style="font-size:9px;color:rgba(79,142,247,.7);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(79,142,247,.15)">&#9632; Kapital &amp; Depotwert</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:16px">';
+  // Eingesetztes Kapital
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Eingesetztes Kapital</div>';
+  h+='<div style="font-size:21px;font-weight:700;color:var(--accent);margin-top:3px">'+fmt(gEinstand)+'</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">Einstandspreis aller Positionen</div></div>';
+  // Portfolio heute
+  var depotDiff = c.total - gEinstand;
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Portfolio heute</div>';
+  h+='<div style="font-size:21px;font-weight:700;color:var(--accent);margin-top:3px">'+fmt(c.total)+'</div>';
+  h+='<div style="font-size:9px;color:'+(depotDiff>=0?'var(--green)':'var(--danger)')+';margin-top:2px">'+(depotDiff>=0?'+':'')+fmt(depotDiff)+' vs. Einstand</div></div>';
+  h+='</div>';
+
+  // ── SECTION 2: Gewinn & Steuer ───────────────────────────────
+  h+='<div style="font-size:9px;color:rgba(232,168,56,.7);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(232,168,56,.15)">&#9632; Gesamtgewinn &amp; Steuer</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:16px">';
+  // Brutto
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Gesamtgewinn brutto</div>';
+  h+='<div style="font-size:21px;font-weight:700;color:var(--green);margin-top:3px">+'+fmt(gesamtBruttoHero)+'</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">vor Steuer - alle Positionen &amp; Vorgange</div></div>';
+  // Steuer
+  var steuerGes = bereitsGezahlt + ausstehend;
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid rgba(220,80,80,.2);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Steuer gesamt</div>';
+  h+='<div style="font-size:21px;font-weight:700;color:var(--danger);margin-top:3px">-'+fmt(steuerGes)+'</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">'+fmt(bereitsGezahlt)+' abgef. + '+fmt(ausstehend)+' ausst.</div></div>';
+  // Netto
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid rgba(76,175,135,.3);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Gesamtgewinn netto</div>';
+  h+='<div style="font-size:21px;font-weight:700;color:var(--green);margin-top:3px">+'+fmt(gesamtNettoHero)+'</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">was dir wirklich bleibt</div></div>';
+  h+='</div>';
+
+  // ── SECTION 3: Rendite & CAGR ────────────────────────────────
+  h+='<div style="font-size:9px;color:rgba(76,175,135,.8);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(76,175,135,.2)">&#9632; Rendite &amp; CAGR</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:8px;margin-bottom:14px">';
+  // Gesamtrendite brutto
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Gesamtrendite brutto</div>';
+  h+='<div style="font-size:20px;font-weight:700;color:var(--green);margin-top:3px">+'+gBruttoPct.toFixed(2)+'%</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">gesamt · vor Steuer</div></div>';
+  // CAGR brutto
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">CAGR brutto p.a.</div>';
+  h+='<div style="font-size:20px;font-weight:700;color:var(--green);margin-top:3px">'+fmtP(gCagrB)+'</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">gewichtet je Position</div></div>';
+  // Gesamtrendite netto
+  h+='<div style="background:rgba(0,0,0,.2);border:1px solid rgba(76,175,135,.3);border-radius:8px;padding:11px 13px">';
+  h+='<div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Gesamtrendite netto</div>';
+  h+='<div style="font-size:20px;font-weight:700;color:var(--green);margin-top:3px">+'+gNettoPct.toFixed(2)+'%</div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:2px">gesamt · nach Steuer</div></div>';
+  // ★ CAGR netto - STAR CARD
+  h+='<div style="background:linear-gradient(135deg,rgba(76,175,135,.18),rgba(46,204,143,.1));border:2px solid rgba(76,175,135,.7);border-radius:8px;padding:11px 14px;position:relative;overflow:hidden">';
+  h+='<div style="position:absolute;top:0;right:0;background:rgba(76,175,135,.15);padding:3px 8px;border-radius:0 8px 0 6px;font-size:8px;color:rgba(76,175,135,.9);font-weight:700;letter-spacing:.5px">&#9733; WICHTIGSTE KENNZAHL</div>';
+  h+='<div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:8px">CAGR netto p.a.</div>';
+  h+='<div style="font-size:32px;font-weight:800;color:#2ecc8f;margin-top:4px;line-height:1">'+fmtP(gCagrN)+'</div>';
+  h+='<div style="font-size:9px;color:rgba(76,175,135,.7);margin-top:4px">gewichtet · je Position · nach Steuer · '+pmRound+' Monate</div></div>';
+  h+='</div>';
+
+  // TR reference note
+  h+='<div style="font-size:10px;color:var(--muted);padding:7px 11px;background:rgba(0,0,0,.18);border-radius:6px">';
+  h+='TR zeigt <strong style="color:var(--text)">3.504 EUR</strong> &ndash; nach abgef. Steuern ('+fmt(bereitsGezahlt)+') aber ohne ausst. Steuer ('+fmt(ausstehend)+'). Unser Netto-Wert ('+fmt(gesamtNettoHero)+') ist vollstandiger.';
+  h+='</div></div>';
+
+  // RENDITE HISTORY CHART - compact, right after hero
+  if(snapshots.length >= 2) {
+    // Compute 4 rendite values per snapshot
+    var rHistory = snapshots.map(function(s) {
+      var cv = calcSnap(s);
+      // gesamtPct brutto
+      var brutPct  = cv.gesamtPct;
+      // gesamtPct netto
+      var netPct   = cv.nettoPct;
+      // CAGR brutto
+      var cagrBrut = cv.cagr;
+      // CAGR netto
+      var cagrNet  = cv.avgMonate > 0 && cv.einstand > 0
+        ? (Math.pow((cv.einstand+cv.netto)/cv.einstand, 12/cv.avgMonate)-1)*100 : 0;
+      return { date: s.date, brutPct: brutPct, netPct: netPct, cagrBrut: cagrBrut, cagrNet: cagrNet };
+    });
+
+    var n = rHistory.length;
+    var W=700, H=140, pL=30, pR=60, pT=18, pB=28;
+    var cW=W-pL-pR, cH=H-pT-pB;
+
+    // Determine Y range across all 4 series
+    var allVals = [];
+    rHistory.forEach(function(r){ allVals.push(r.brutPct,r.netPct,r.cagrBrut,r.cagrNet); });
+    var yMin = Math.min(0, Math.floor(Math.min.apply(null,allVals)/5)*5);
+    var yMax = Math.ceil(Math.max.apply(null,allVals)/5)*5 + 2;
+    var yRange = yMax - yMin;
+
+    function toY(v){ return pT + cH - ((v-yMin)/yRange*cH); }
+    function toX(i){ return pL + (n===1 ? cW/2 : i/(n-1)*cW); }
+
+    function makeLine(vals, col, width, dash) {
+      if(n===1) return '<circle cx="'+toX(0)+'" cy="'+toY(vals[0])+'" r="4" fill="'+col+'"/>';
+      var d='M'+toX(0)+','+toY(vals[0]);
+      for(var i=1;i<n;i++){
+        var cpx=(toX(i-1)+toX(i))/2;
+        d+=' C'+cpx+','+toY(vals[i-1])+' '+cpx+','+toY(vals[i])+' '+toX(i)+','+toY(vals[i]);
+      }
+      var da = dash ? ' stroke-dasharray="'+dash+'"' : '';
+      return '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+width+'"'+da+'/>';
+    }
+    function makeDots(vals, col) {
+      var out='';
+      for(var i=0;i<n;i++) out+='<circle cx="'+toX(i)+'" cy="'+toY(vals[i])+'" r="3" fill="'+col+'" stroke="#0a1628" stroke-width="1.5"/>';
+      return out;
+    }
+
+    var brutPcts  = rHistory.map(function(r){return r.brutPct;});
+    var netPcts   = rHistory.map(function(r){return r.netPct;});
+    var cagrBruts = rHistory.map(function(r){return r.cagrBrut;});
+    var cagrNets  = rHistory.map(function(r){return r.cagrNet;});
+
+    var svg='';
+    svg+='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+
+    // Y gridlines
+    svg+='<g stroke="rgba(255,255,255,.06)" stroke-width="0.6">';
+    var step = yRange<=20?5:yRange<=40?10:20;
+    for(var yv=Math.ceil(yMin/step)*step; yv<=yMax; yv+=step){
+      var yy=toY(yv);
+      svg+='<line x1="'+pL+'" y1="'+yy+'" x2="'+(pL+cW)+'" y2="'+yy+'"/>';
+      svg+='<text x="'+(pL-4)+'" y="'+(yy+4)+'" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">'+yv+'%</text>';
+    }
+    // Zero line
+    if(yMin < 0) {
+      var yz=toY(0);
+      svg+='<line x1="'+pL+'" y1="'+yz+'" x2="'+(pL+cW)+'" y2="'+yz+'" stroke="rgba(255,255,255,.2)" stroke-width="0.8"/>';
+    }
+    svg+='</g>';
+
+    // Subtle fill under CAGR netto
+    if(n>1){
+      var fp='M'+toX(0)+','+toY(cagrNets[0]);
+      for(var i=1;i<n;i++){var cx=(toX(i-1)+toX(i))/2;fp+=' C'+cx+','+toY(cagrNets[i-1])+' '+cx+','+toY(cagrNets[i])+' '+toX(i)+','+toY(cagrNets[i]);}
+      fp+=' L'+toX(n-1)+','+toY(yMin)+' L'+toX(0)+','+toY(yMin)+' Z';
+      svg+='<path d="'+fp+'" fill="rgba(76,175,135,.1)"/>';
+    }
+
+    // Lines: brutto dashed, netto solid; Gesamt thinner, CAGR thicker
+    svg+=makeLine(brutPcts,  'rgba(150,180,255,.55)', 1.5, '5,3');  // Gesamt brutto dashed faint
+    svg+=makeLine(netPcts,   'rgba(150,180,255,.75)', 1.5, '5,3');  // Gesamt netto dashed medium (no - same dashed, different opacity is confusing - use different color)
+    // Actually: brutto=blue-ish, netto=green-ish, CAGR bolder
+    // Redo with clearer scheme:
+    // Gesamt brutto %: steel blue dashed thin
+    // Gesamt netto %:  steel blue solid thin
+    // CAGR brutto:     amber dashed medium
+    // CAGR netto:      emerald solid THICK - the star
+
+    svg='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+    svg+='<g stroke="rgba(255,255,255,.06)" stroke-width="0.6">';
+    for(var yv=Math.ceil(yMin/step)*step; yv<=yMax; yv+=step){
+      var yy=toY(yv);
+      svg+='<line x1="'+pL+'" y1="'+yy+'" x2="'+(pL+cW)+'" y2="'+yy+'"/>';
+      svg+='<text x="'+(pL-4)+'" y="'+(yy+4)+'" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">'+yv+'%</text>';
+    }
+    svg+='</g>';
+    if(n>1){
+      var fp='M'+toX(0)+','+toY(cagrNets[0]);
+      for(var i=1;i<n;i++){var cx=(toX(i-1)+toX(i))/2;fp+=' C'+cx+','+toY(cagrNets[i-1])+' '+cx+','+toY(cagrNets[i])+' '+toX(i)+','+toY(cagrNets[i]);}
+      fp+=' L'+toX(n-1)+','+toY(Math.max(yMin,0))+' L'+toX(0)+','+toY(Math.max(yMin,0))+' Z';
+      svg+='<path d="'+fp+'" fill="rgba(76,175,135,.12)"/>';
+    }
+
+    // Draw order: back to front
+    svg+=makeLine(brutPcts,  '#5b8fd4', 1.2, '4,3');       // Gesamt brutto - blue dashed thin
+    svg+=makeLine(netPcts,   '#5b8fd4', 1.8, '');           // Gesamt netto  - blue solid
+    svg+=makeLine(cagrBruts, '#d4a843', 1.4, '4,3');        // CAGR brutto   - amber dashed
+    svg+=makeLine(cagrNets,  '#2ecc8f', 3,   '');           // CAGR netto    - emerald THICK ★
+
+    // Dots + value labels on each point
+    function makeDotsLabels(vals, col, bold, offsetY) {
+      var out='';
+      for(var i=0;i<n;i++){
+        var cx=toX(i), cy=toY(vals[i]);
+        out+='<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+col+'" stroke="#0a1628" stroke-width="1.5"/>';
+        var lx=cx, ly=cy+(offsetY||0);
+        out+='<text x="'+lx+'" y="'+ly+'" fill="'+col+'" font-size="'+(bold?'9':'8')+'" font-weight="'+(bold?'700':'500')+'" text-anchor="middle">'+vals[i].toFixed(1)+'%</text>';
+      }
+      return out;
+    }
+    svg+=makeDotsLabels(brutPcts,  '#5b8fd4', false, -6);
+    svg+=makeDotsLabels(netPcts,   '#5b8fd4', false,  14);
+    svg+=makeDotsLabels(cagrBruts, '#d4a843', false, -6);
+    svg+=makeDotsLabels(cagrNets,  '#2ecc8f', true,   14);
+
+    // Right-side end labels
+    var lastR = rHistory[n-1];
+    svg+='<text x="'+(pL+cW+4)+'" y="'+(toY(lastR.brutPct)+4)+'" fill="#5b8fd4" font-size="8.5" opacity=".7">'+lastR.brutPct.toFixed(1)+'%</text>';
+    svg+='<text x="'+(pL+cW+4)+'" y="'+(toY(lastR.netPct)+4)+'" fill="#5b8fd4" font-size="8.5">'+lastR.netPct.toFixed(1)+'%</text>';
+    svg+='<text x="'+(pL+cW+4)+'" y="'+(toY(lastR.cagrBrut)+4)+'" fill="#d4a843" font-size="8.5" opacity=".8">'+lastR.cagrBrut.toFixed(1)+'%</text>';
+    svg+='<text x="'+(pL+cW+4)+'" y="'+(toY(lastR.cagrNet)+4)+'" fill="#2ecc8f" font-size="9.5" font-weight="700">'+lastR.cagrNet.toFixed(1)+'%</text>';
+
+    // X axis dates
+    rHistory.forEach(function(rh,i){
+      var x=toX(i), y=pT+cH+14;
+      svg+='<text x="'+x+'" y="'+y+'" fill="rgba(255,255,255,.35)" font-size="8.5" text-anchor="middle">'+rh.date.substring(5)+'</text>';
+      svg+='<line x1="'+x+'" y1="'+(pT+cH)+'" x2="'+x+'" y2="'+(pT+cH+4)+'" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+    });
+
+    svg+='</svg>';
+
+    // Legend
+    var leg='<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;padding:0 2px">';
+    leg+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.55)"><svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#5b8fd4" stroke-width="1.5" stroke-dasharray="4,3"/></svg>Gesamt brutto %</div>';
+    leg+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.7)"><svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#5b8fd4" stroke-width="2"/></svg>Gesamt netto %</div>';
+    leg+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.6)"><svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#d4a843" stroke-width="1.5" stroke-dasharray="4,3"/></svg>CAGR brutto p.a.</div>';
+    leg+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#2ecc8f;font-weight:600"><svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#2ecc8f" stroke-width="3"/></svg>&#9733; CAGR netto p.a.</div>';
+    leg+='</div>';
+
+    h+='<div style="margin-top:14px;padding:12px 14px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">';
+    h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Rendite-Entwicklung uber alle Snapshots</div>';
+    h+=svg;
+    h+=leg;
+    h+='</div>';
+  }
+
+  // Geo
+
+  h+='<div class="sec-label">Geografische Allokation</div>';
+  h+='<div class="card" style="margin-bottom:14px">';
+  var geo=calcGeo(snap.etfs); var gTotal=c.total;
+
+  function geoOpacity(pct) { return pct>0 ? Math.max(0.2, Math.min(0.95, pct/50)) : 0.05; }
+  // Colors matching chart regions exactly
+  var C_USA='79,142,247', C_CA='100,160,255', C_EU='76,175,135', C_JP='232,168,56',
+      C_CN='220,80,80',   C_EM='124,92,191',  C_AU='200,140,30', C_REST='122,128,153';
+
+  // Build SVG map with realistic continent shapes
+  var svgMap = '';
+  svgMap += '<rect width="1000" height="500" fill="#0a1628"/>';
+
+  // Graticule grid
+  svgMap += '<g stroke="rgba(79,142,247,.07)" stroke-width="0.5" fill="none">';
+  var lats = [75,60,45,30,15,0,-15,-30,-45,-60];
+  var lngs = [0,30,60,90,120,150,180,210,240,270,300,330];
+  for(var i=0;i<lats.length;i++){var y=(90-lats[i])/180*500;svgMap+='<line x1="0" y1="'+y+'" x2="1000" y2="'+y+'">';}
+  for(var i=0;i<lngs.length;i++){var x=lngs[i]/360*1000;svgMap+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="500">';}
+  svgMap += '</g>';
+
+  // CANADA (north part)
+  var caOp=geoOpacity(geo.Kanada);
+  svgMap += '<path class="map-region" data-region="Kanada" data-pct="'+geo.Kanada.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+C_CA+','+Math.max(0.08,caOp)+')" stroke="rgba('+C_CA+',.5)" stroke-width="1" ';
+  svgMap += 'd="M133,52 L158,48 L185,45 L210,50 L228,58 L238,72 L235,95 L228,110 L222,122 L215,130 ';
+  svgMap += 'L205,132 L192,130 L178,128 L165,130 L155,128 L142,118 L133,105 L125,88 L120,72 L125,62 Z"/>';
+  if(geo.Kanada>0.5){ svgMap+='<text x="177" y="98" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" style="pointer-events:none">CA</text><text x="177" y="111" fill="rgba(255,255,255,.8)" font-size="9.5" text-anchor="middle" style="pointer-events:none">'+geo.Kanada.toFixed(1)+'%</text>'; }
+
+  // USA (south part)
+  var usaOp=geoOpacity(geo.USA);
+  svgMap += '<path class="map-region" data-region="USA" data-pct="'+geo.USA.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+C_USA+','+usaOp+')" stroke="rgba('+C_USA+',.6)" stroke-width="1" ';
+  svgMap += 'd="M142,132 L165,130 L178,128 L192,130 L205,132 L215,130 L222,122 L228,138 ';
+  svgMap += 'L230,155 L225,172 L215,185 L200,198 L185,210 L172,222 L162,230 L150,228 ';
+  svgMap += 'L138,218 L128,202 L122,185 L118,165 L115,145 L118,132 L130,130 Z"/>';
+  if(geo.USA>1){ svgMap+='<text x="172" y="172" fill="#fff" font-size="14" font-weight="700" text-anchor="middle" style="pointer-events:none">USA</text><text x="172" y="187" fill="rgba(255,255,255,.85)" font-size="12" text-anchor="middle" style="pointer-events:none">'+geo.USA.toFixed(1)+'%</text>'; }
+
+  // GREENLAND
+  svgMap += '<path fill="rgba('+C_CA+',0.08)" stroke="rgba('+C_CA+',.2)" stroke-width="0.5" d="M215,22 L235,18 L252,22 L258,35 L252,48 L238,52 L222,48 L212,36 Z"/>';
+
+  // SOUTH AMERICA (realistic)
+  svgMap += '<path class="map-region" data-region="Lateinamerika" data-pct="0.0" style="cursor:pointer" ';
+  svgMap += 'fill="rgba(122,128,153,0.07)" stroke="rgba(122,128,153,.25)" stroke-width="1" ';
+  svgMap += 'd="M168,242 L185,235 L202,238 L215,248 L222,262 L225,278 L228,295 L228,315 L225,335 ';
+  svgMap += 'L220,355 L215,372 L208,388 L198,400 L185,408 L172,405 L160,395 L152,378 L148,358 ';
+  svgMap += 'L148,338 L150,315 L152,295 L155,275 L158,258 Z"/>';
+
+  // EUROPE (realistic)
+  var euCol='76,175,135'; var euOp=geoOpacity(geo.Europa);
+  svgMap += '<path class="map-region" data-region="Europa" data-pct="'+geo.Europa.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+euCol+','+euOp+')" stroke="rgba('+euCol+',.6)" stroke-width="1" ';
+  svgMap += 'd="M430,72 L445,68 L462,68 L475,75 L482,85 L485,98 L482,110 L475,120 L465,128 ';
+  svgMap += 'L455,135 L445,140 L435,142 L422,140 L412,132 L407,120 L407,108 L410,95 L418,83 Z"/>';
+  if(geo.Europa>1){ svgMap+='<text x="447" y="108" fill="#fff" font-size="13" font-weight="700" text-anchor="middle" style="pointer-events:none">EU</text><text x="447" y="122" fill="rgba(255,255,255,.85)" font-size="11" text-anchor="middle" style="pointer-events:none">'+geo.Europa.toFixed(1)+'%</text>'; }
+
+  // SCANDINAVIA bump
+  svgMap += '<path fill="rgba('+euCol+','+euOp+')" stroke="rgba('+euCol+',.4)" stroke-width="0.8" d="M447,55 L458,50 L468,55 L468,68 L458,72 L447,68 Z"/>';
+
+  // AFRICA (realistic)
+  svgMap += '<path class="map-region" data-region="Afrika" data-pct="0.0" style="cursor:pointer" ';
+  svgMap += 'fill="rgba(122,128,153,0.07)" stroke="rgba(122,128,153,.2)" stroke-width="1" ';
+  svgMap += 'd="M430,152 L460,148 L482,152 L498,165 L508,182 L512,202 L512,225 L508,248 L500,270 ';
+  svgMap += 'L490,290 L478,308 L465,322 L450,330 L435,328 L420,318 L410,300 L405,278 L405,255 ';
+  svgMap += 'L408,232 L412,208 L418,185 L425,168 Z"/>';
+
+  // RUSSIA / CENTRAL ASIA
+  svgMap += '<path fill="rgba(122,128,153,0.06)" stroke="rgba(122,128,153,.15)" stroke-width="0.8" ';
+  svgMap += 'd="M480,40 L560,32 L650,30 L740,35 L790,42 L808,52 L805,65 L782,75 L740,82 ';
+  svgMap += 'L690,85 L635,85 L580,82 L530,78 L490,72 L475,58 Z"/>';
+
+  // MIDDLE EAST
+  svgMap += '<path fill="rgba(122,128,153,0.06)" stroke="rgba(122,128,153,.15)" stroke-width="0.8" ';
+  svgMap += 'd="M488,145 L520,140 L545,148 L555,165 L548,182 L528,192 L505,192 L488,178 L483,162 Z"/>';
+
+  // INDIA + SE ASIA (EM_Rest) - purple like chart
+  var emRestOp=geoOpacity(geo.EM_Rest);
+  svgMap += '<path class="map-region" data-region="EM (Indien/SE-Asien)" data-pct="'+geo.EM_Rest.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+C_EM+','+emRestOp+')" stroke="rgba('+C_EM+',.5)" stroke-width="1" ';
+  svgMap += 'd="M555,132 L600,128 L635,135 L658,148 L668,165 L665,185 L652,202 L635,215 ';
+  svgMap += 'L615,222 L592,222 L572,212 L558,195 L550,175 L550,155 Z"/>';
+  if(geo.EM_Rest>0.5){ svgMap+='<text x="608" y="175" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" style="pointer-events:none">EM</text><text x="608" y="188" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle" style="pointer-events:none">'+geo.EM_Rest.toFixed(1)+'%</text>'; }
+
+  // CHINA + EAST ASIA - red like chart
+  var cnOp=geoOpacity(geo.China);
+  svgMap += '<path class="map-region" data-region="China" data-pct="'+geo.China.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+C_CN+','+cnOp+')" stroke="rgba('+C_CN+',.5)" stroke-width="1" ';
+  svgMap += 'd="M648,95 L705,88 L748,92 L772,105 L778,122 L768,142 L748,155 L722,162 L695,160 ';
+  svgMap += 'L668,152 L650,138 L643,120 Z"/>';
+  if(geo.China>0.5){ svgMap+='<text x="712" y="125" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" style="pointer-events:none">CN</text><text x="712" y="138" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle" style="pointer-events:none">'+geo.China.toFixed(1)+'%</text>'; }
+
+  // JAPAN (realistic island shape)
+  var jpCol='232,168,56'; var jpOp=geoOpacity(geo.Japan);
+  svgMap += '<path class="map-region" data-region="Japan" data-pct="'+geo.Japan.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+jpCol+','+jpOp+')" stroke="rgba('+jpCol+',.7)" stroke-width="1.2" ';
+  svgMap += 'd="M795,92 L805,88 L818,90 L825,98 L825,112 L818,120 L808,122 L798,118 L792,108 Z"/>';
+  if(geo.Japan>1){ svgMap+='<text x="808" y="107" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" style="pointer-events:none">JP</text><text x="808" y="120" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle" style="pointer-events:none">'+geo.Japan.toFixed(1)+'%</text>'; }
+
+  // KOREA + small islands
+  svgMap += '<path fill="rgba('+emCol+',0.12)" stroke="rgba('+emCol+',.3)" stroke-width="0.8" d="M778,108 L788,105 L793,112 L790,122 L780,125 L774,118 Z"/>';
+
+  // SE ASIA archipelago
+  svgMap += '<path fill="rgba('+emCol+',0.1)" stroke="rgba('+emCol+',.2)" stroke-width="0.5" d="M672,228 L720,222 L748,232 L752,248 L738,258 L708,262 L680,255 L665,242 Z"/>';
+
+  // AUSTRALIA (realistic)
+  var auCol='232,168,56'; var auOp=geoOpacity(geo.Australien);
+  svgMap += '<path class="map-region" data-region="Australien" data-pct="'+geo.Australien.toFixed(1)+'" style="cursor:pointer" ';
+  svgMap += 'fill="rgba('+auCol+','+Math.max(0.1,auOp)+')" stroke="rgba('+auCol+',.5)" stroke-width="1" ';
+  svgMap += 'd="M720,310 L762,302 L798,308 L820,322 L830,342 L828,365 L818,385 L800,400 ';
+  svgMap += 'L775,408 L748,408 L722,398 L705,380 L700,358 L702,335 Z"/>';
+  if(geo.Australien>0.3){ svgMap+='<text x="766" y="358" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" style="pointer-events:none">AU</text><text x="766" y="371" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle" style="pointer-events:none">'+geo.Australien.toFixed(1)+'%</text>'; }
+
+  // NEW ZEALAND
+  svgMap += '<path fill="rgba('+auCol+',0.08)" stroke="rgba('+auCol+',.2)" stroke-width="0.5" d="M855,362 L865,358 L872,365 L870,378 L860,382 L852,375 Z"/>';
+
+  // Tooltip
+  svgMap += '<g id="map-tooltip" style="display:none">';
+  svgMap += '<rect id="tt-bg" x="0" y="0" width="155" height="48" rx="7" fill="rgba(10,18,40,.95)" stroke="rgba(79,142,247,.5)" stroke-width="1.2"/>';
+  svgMap += '<text id="tt-name" x="77" y="17" fill="rgba(255,255,255,.85)" font-size="11" font-weight="500" text-anchor="middle"></text>';
+  svgMap += '<text id="tt-pct" x="77" y="36" fill="rgba(76,175,135,1)" font-size="15" font-weight="700" text-anchor="middle"></text>';
+  svgMap += '</g>';
+
+  // Legend bottom-left
+  svgMap += '<g transform="translate(12,468)">';
+  svgMap += '<rect x="0"   y="0" width="10" height="10" rx="2" fill="rgba('+C_USA+',.8)"/><text x="14"  y="9" fill="rgba(255,255,255,.65)" font-size="9">USA</text>';
+  svgMap += '<rect x="48"  y="0" width="10" height="10" rx="2" fill="rgba('+C_CA+',.8)"/><text x="62"  y="9" fill="rgba(255,255,255,.65)" font-size="9">Kanada</text>';
+  svgMap += '<rect x="118" y="0" width="10" height="10" rx="2" fill="rgba('+C_EU+',.8)"/><text x="132" y="9" fill="rgba(255,255,255,.65)" font-size="9">Europa</text>';
+  svgMap += '<rect x="188" y="0" width="10" height="10" rx="2" fill="rgba('+C_JP+',.8)"/><text x="202" y="9" fill="rgba(255,255,255,.65)" font-size="9">Japan</text>';
+  svgMap += '<rect x="240" y="0" width="10" height="10" rx="2" fill="rgba('+C_CN+',.8)"/><text x="254" y="9" fill="rgba(255,255,255,.65)" font-size="9">China</text>';
+  svgMap += '<rect x="290" y="0" width="10" height="10" rx="2" fill="rgba('+C_EM+',.8)"/><text x="304" y="9" fill="rgba(255,255,255,.65)" font-size="9">EM</text>';
+  svgMap += '<rect x="325" y="0" width="10" height="10" rx="2" fill="rgba('+C_AU+',.8)"/><text x="339" y="9" fill="rgba(255,255,255,.65)" font-size="9">Australien</text>';
+  svgMap += '</g>';
+
+  h+='<div style="padding:12px 14px 6px">';
+  h+='<svg viewBox="0 0 1000 490" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;border-radius:8px" id="geo-map">';
+  h+=svgMap;
+  h+='</svg></div>';
+
+  // Bars
+  h+='<div style="padding:4px 14px 12px">';
+  function geoRow(name,pct,col){
+    var w=Math.min(pct/80*100,100).toFixed(1);
+    return '<div class="country-row"><div class="country-name">'+name+'</div>'
+      +'<div class="country-track"><div class="country-fill" style="width:'+w+'%;background:'+col+'"></div></div>'
+      +'<div class="country-pct" style="color:'+col+'">'+pct.toFixed(1)+'%</div>'
+      +'<div class="country-eur">'+fmt(pct/100*gTotal)+'</div></div>';
+  }
+  h+=geoRow('USA',         geo.USA,       '#4f8ef7');
+  h+=geoRow('Europa',      geo.Europa,    '#4caf87');
+  h+=geoRow('Japan',       geo.Japan,     '#e8a838');
+  h+=geoRow('China',       geo.China,     '#dc5050');
+  h+=geoRow('EM Rest',     geo.EM_Rest,   '#7c5cbf');
+  h+=geoRow('Kanada',      geo.Kanada,    '#7a8099');
+  h+=geoRow('Australien',  geo.Australien,'#e8a838');
+  h+=geoRow('Sonstige',    geo.Sonstige,  '#7a8099');
+  h+='</div>';
+  h+='</div>';
+
+  // GEO HISTORY CHART - Stacked Area Chart across all snapshots
+  if(snapshots.length >= 2) {
+    h+='<div style="margin-top:12px;padding:14px 14px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">';
+    h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Entwicklung Geo-Anteile uber alle Snapshots</div>';
+
+    // Collect geo data per snapshot
+    var geoHistory = snapshots.map(function(s) {
+      return { date: s.date, geo: calcGeo(s.etfs) };
+    });
+
+    var n = geoHistory.length;
+    var W = 800, H = 200, padL = 28, padR = 12, padT = 8, padB = 32;
+    var chartW = W - padL - padR;
+    var chartH = H - padT - padB;
+    var regions = [
+      { key: 'USA',        label: 'USA',    color: '79,142,247'  },
+      { key: 'Kanada',     label: 'CA',     color: '100,160,255' },
+      { key: 'Europa',     label: 'EU',     color: '76,175,135'  },
+      { key: 'Japan',      label: 'JP',     color: '232,168,56'  },
+      { key: 'China',      label: 'CN',     color: '220,80,80'   },
+      { key: 'EM_Rest',    label: 'EM',     color: '124,92,191'  },
+      { key: 'Australien', label: 'AU',     color: '200,140,30'  },
+      { key: 'Sonstige',   label: 'Sons.',  color: '80,90,120'   },
+    ];
+
+    // Build stacked values: each snapshot = array of cumulative %
+    var stacks = geoHistory.map(function(gh) {
+      var cum = 0;
+      return regions.map(function(r) {
+        var pct = gh.geo[r.key] || 0;
+        var from = cum;
+        cum += pct;
+        return { from: from, to: cum, pct: pct };
+      });
+    });
+
+    var svg = '';
+    svg += '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+
+    // Background
+    svg += '<rect width="'+W+'" height="'+H+'" fill="transparent"/>';
+
+    // Y grid lines at 0,25,50,75,100%
+    svg += '<g stroke="rgba(255,255,255,.06)" stroke-width="0.8">';
+    [0,25,50,75,100].forEach(function(pct){
+      var y = padT + chartH - (pct/100*chartH);
+      svg += '<line x1="'+padL+'" y1="'+y+'" x2="'+(padL+chartW)+'" y2="'+y+'"/>';
+      svg += '<text x="'+(padL-4)+'" y="'+(y+4)+'" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">'+pct+'</text>';
+    });
+    svg += '</g>';
+
+    // Draw stacked areas - one path per region
+    regions.forEach(function(r, ri) {
+      // Build path: go left-to-right along "to", then right-to-left along "from"
+      var topPts = [], botPts = [];
+      for(var i=0; i<n; i++) {
+        var x = padL + (n===1 ? chartW/2 : i/(n-1)*chartW);
+        var yTop = padT + chartH - (stacks[i][ri].to/100 * chartH);
+        var yBot = padT + chartH - (stacks[i][ri].from/100 * chartH);
+        topPts.push([x, yTop]);
+        botPts.push([x, yBot]);
+      }
+      // If only 1 snapshot, draw a bar
+      if(n === 1) {
+        var x = padL + chartW/2;
+        var bw = 40;
+        svg += '<rect x="'+(x-bw/2)+'" y="'+topPts[0][1]+'" width="'+bw+'" height="'+(botPts[0][1]-topPts[0][1])+'" fill="rgba('+r.color+',.75)"/>';
+        return;
+      }
+      var d = 'M '+topPts[0][0]+','+topPts[0][1];
+      for(var i=1;i<n;i++) {
+        // Smooth bezier
+        var cpx = (topPts[i-1][0]+topPts[i][0])/2;
+        d += ' C '+cpx+','+topPts[i-1][1]+' '+cpx+','+topPts[i][1]+' '+topPts[i][0]+','+topPts[i][1];
+      }
+      d += ' L '+botPts[n-1][0]+','+botPts[n-1][1];
+      for(var i=n-2;i>=0;i--) {
+        var cpx = (botPts[i+1][0]+botPts[i][0])/2;
+        d += ' C '+cpx+','+botPts[i+1][1]+' '+cpx+','+botPts[i][1]+' '+botPts[i][0]+','+botPts[i][1];
+      }
+      d += ' Z';
+      svg += '<path d="'+d+'" fill="rgba('+r.color+',.72)" stroke="rgba('+r.color+',.9)" stroke-width="0.8"/>';
+
+      // Region label on rightmost point if large enough
+      var lastPct = stacks[n-1][ri].pct;
+      if(lastPct >= 5) {
+        var ly = padT + chartH - ((stacks[n-1][ri].from + lastPct/2)/100*chartH);
+        svg += '<text x="'+(padL+chartW+3)+'" y="'+(ly+4)+'" fill="rgba('+r.color+',1)" font-size="9" font-weight="600">'+r.label+'</text>';
+      }
+    });
+
+    // X axis: snapshot dates
+    geoHistory.forEach(function(gh, i) {
+      var x = padL + (n===1 ? chartW/2 : i/(n-1)*chartW);
+      var y = padT + chartH + 14;
+      var label = gh.date.substring(5); // MM-DD
+      svg += '<text x="'+x+'" y="'+y+'" fill="rgba(255,255,255,.4)" font-size="9" text-anchor="middle">'+label+'</text>';
+      // Tick
+      svg += '<line x1="'+x+'" y1="'+(padT+chartH)+'" x2="'+x+'" y2="'+(padT+chartH+4)+'" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+      // Vertical dotted line
+      svg += '<line x1="'+x+'" y1="'+padT+'" x2="'+x+'" y2="'+(padT+chartH)+'" stroke="rgba(255,255,255,.05)" stroke-width="1" stroke-dasharray="3,3"/>';
+    });
+
+    // X axis line
+    svg += '<line x1="'+padL+'" y1="'+(padT+chartH)+'" x2="'+(padL+chartW)+'" y2="'+(padT+chartH)+'" stroke="rgba(255,255,255,.15)" stroke-width="1"/>';
+
+    svg += '</svg>';
+
+    // Layout: chart + legend side by side
+    h += '<div style="display:flex;gap:12px;align-items:flex-start">';
+
+    // Chart
+    h += '<div style="flex:1;min-width:0">';
+    h += svg;
+    h += '</div>';
+
+    // Legend vertical right side
+    h += '<div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;flex-shrink:0">';
+    regions.forEach(function(r) {
+      h += '<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.65);white-space:nowrap">';
+      h += '<div style="width:10px;height:10px;border-radius:2px;background:rgba('+r.color+',.85);flex-shrink:0"></div>';
+      h += r.label+'</div>';
+    });
+    h += '</div>';
+
+    h += '</div>'; // end flex row
+    h += '</div>'; // end card
+  }
+
+  // Sectors
+
+  // Sectors
+  h+='<div class="sec-label">Sektoranalyse (GICS)</div>';
+  h+='<div class="card"><div style="padding:10px 14px 14px">';
+  var sec=calcSectors(snap.etfs); var sTotal=c.total; var sScale=35;
+  var sKeys=Object.keys(sec).sort(function(a,b){return sec[b]-sec[a];});
+  sKeys.forEach(function(k){
+    var pct=sec[k]; var col=SECTOR_COLORS[k]||'var(--muted)';
+    var w=Math.min(pct/sScale*100,100).toFixed(1);
+    var lbl=SECTOR_LABELS[k]||k;
+    var note=k==='IT'?' (= S1)':k==='Komm'?' (S2-Teil)':'';
+    var isIT=k==='IT'; var isK=k==='Komm';
+    h+='<div class="country-row" style="margin-bottom:7px">';
+    h+='<div class="country-name" style="width:180px;color:'+(isIT?'var(--s1)':isK?'var(--s2)':'var(--text)')+';font-weight:'+(isIT||isK?600:400)+'">'+lbl+'<span style="font-size:9px;color:var(--muted)">'+note+'</span></div>';
+    h+='<div class="country-track"><div class="country-fill" style="width:'+w+'%;background:'+col+'"></div></div>';
+    h+='<div class="country-pct" style="color:'+col+'">'+pct.toFixed(1)+'%</div>';
+    h+='<div class="country-eur">'+fmt(pct/100*sTotal)+'</div></div>';
+  });
+  var s1=sec['IT']||0; var s2=s1+(sec['Komm']||0);
+  h+='<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">';
+  h+='<div style="font-size:11px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:6px;padding:5px 10px">S1 IT: <strong style="color:var(--s1)">'+s1.toFixed(1)+'%</strong> · Ziel ≤ 20% '+(s1<=20?'<span class="c-green">OK</span>':'<span class="c-danger">Ueberschritten</span>')+'</div>';
+  h+='<div style="font-size:11px;background:rgba(232,168,56,.08);border:1px solid rgba(232,168,56,.2);border-radius:6px;padding:5px 10px">S2: <strong style="color:var(--s2)">'+s2.toFixed(1)+'%</strong> · IT + Komm.</div>';
+  h+='</div>';
+  h+='</div></div>';
+
+
+  // Group 1: Portfolio & Tech
+  h+='<div class="sec-label">Portfolio & Tech-Exposition</div>';
+  h+='<div class="kpi-row">';
+  h+='<div class="kpi"><label>Portfolio Gesamt</label><div class="val c-accent">'+fmt(c.total)+'</div><div class="sub">'+(dTotal!==null?'<span class="'+(dTotal>=0?'delta-pos':'delta-neg')+'">'+fmtA(dTotal)+' ggü. '+prev.date+'</span>':snap.date)+'</div></div>';
+  h+='<div class="kpi"><label>Einstandspreis</label><div class="val c-accent">'+fmt(c.einstand)+'</div><div class="sub">Ø '+Math.round(c.avgMonate)+' Monate gehalten</div></div>';
+  h+='<div class="kpi"><label>Schicht 1 — IT offiziell</label><div class="val '+(c.s1pct<=20?'c-green':c.s1pct<=25?'c-warn':'c-danger')+'">'+c.s1pct.toFixed(1)+'%</div><div class="sub">'+fmt(c.s1eur)+' · Ziel ≤ '+TARGET_S1+'%'+(dS1!==null?' · <span class="'+(dS1<=0?'delta-pos':'delta-neg')+'">'+(dS1>=0?'+':'')+dS1.toFixed(1)+'pp</span>':'')+'</div></div>';
+  h+='<div class="kpi"><label>Schicht 2 — tech-adj.</label><div class="val '+(c.s2pct<=28?'c-warn':'c-danger')+'">'+c.s2pct.toFixed(1)+'%</div><div class="sub">'+fmt(c.s2eur)+' · IT + Komm. + adj.</div></div>';
+  h+='</div>';
+    // Group 2: Rendite & Steuer - 3 sub-groups
+  var cagrNetto=c.einstand>0&&c.avgMonate>0?(Math.pow((c.einstand+c.netto)/c.einstand,12/c.avgMonate)-1)*100:0;
+  var gesamtBrutto = c.gewinnEur + CSV_REALIZED_TOTAL + CSV_KAPITAL_TOTAL;
+  var gesamtSteuer = gesamtBrutto>0 ? gesamtBrutto*TAX : 0;
+  var gesamtNetto  = gesamtBrutto - gesamtSteuer;
+
+  // S1/S2 bars
+  h+='<div class="card">';
+  h+='<div class="card-title" style="padding-bottom:10px">Tech-Exposition S1/S2 pro ETF <span style="font-size:10px;color:var(--muted);margin-left:8px">Balken 0→50% · rote Linie = 20% Ziel</span></div>';
+  h+='<div class="legend" style="padding:0 14px 8px">';
+  h+='<div class="legend-item"><div class="ldot" style="background:var(--s1)"></div>S1 (IT offiziell)</div>';
+  h+='<div class="legend-item"><div class="ldot" style="background:var(--s2)"></div>S2 (+ tech-adj.)</div>';
+  h+='</div><div style="padding:0 14px 14px">';
+  snap.etfs.forEach(function(e){
+    var t=TECH[e.isin]||{s1:0,s2a:0};
+    var s2=t.s1+t.s2a;
+    var s2w=Math.min(s2/50*100,100).toFixed(1);
+    var s1f=s2>0?(t.s1/s2*100).toFixed(1)+'%':'0%';
+    var tw=(TARGET_S1/50*100).toFixed(1);
+    var gw=(e.wert/c.total*100).toFixed(1);
+    h+='<div class="bar-row"><div class="bar-name">'+e.name+'<br><span style="font-size:10px">'+gw+'% PF</span></div>';
+    h+='<div class="bar-track"><div class="bar-fill" style="width:'+s2w+'%;background:linear-gradient(90deg,var(--s1) '+s1f+',var(--s2) '+s1f+')"></div>';
+    h+='<div class="target-mark" style="left:'+tw+'%"></div>';
+    h+='<span class="bar-label">'+t.s1.toFixed(0)+'% / '+s2.toFixed(0)+'%</span></div></div>';
+  });
+  h+='</div></div>';
+
+  // ETF table
+  h+='<div class="card"><table><thead><tr><th>ETF</th><th>Wert</th><th>Gew.</th><th>S1</th><th>S2</th><th>Gewinn %</th><th>Gewinn EUR</th><th>Nach Steuer</th></tr></thead><tbody>';
+  snap.etfs.forEach(function(e){
+    var t=TECH[e.isin]||{s1:0,s2a:0}; var s2=t.s1+t.s2a;
+    var gw=(e.wert/c.total*100).toFixed(1);
+    var gEur=e.einstand>0?e.wert-e.einstand:(e.gewinnEur||e.wert*(e.gewinnPct||0)/100);
+    var dw=cp?(e.wert-((cp.etfs||[]).filter(function(x){return x.isin===e.isin;})[0]||{wert:e.wert}).wert):null;
+    var bc1=t.s1<=15?'b-low':t.s1<=25?'b-mid':'b-high';
+    var bc2=s2<=20?'b-low':s2<=30?'b-mid':'b-high';
+    h+='<tr><td><strong>'+e.name+'</strong><br><span style="font-size:9px;color:var(--muted)">'+e.isin+'</span></td>';
+    h+='<td>'+fmt(e.wert)+(dw!==null?'<br><span class="'+(dw>=0?'delta-pos':'delta-neg')+'" style="font-size:10px">'+fmtA(dw)+'</span>':'')+'</td>';
+    h+='<td>'+gw+'%</td>';
+    h+='<td><span class="badge '+bc1+'">'+t.s1.toFixed(1)+'%</span></td>';
+    h+='<td><span class="badge '+bc2+'">'+s2.toFixed(1)+'%</span></td>';
+    h+='<td class="c-green">'+(e.gewinnPct?fmtP(e.gewinnPct):'–')+'</td>';
+    h+='<td class="c-green">+'+fmt(gEur)+'</td>';
+    h+='<td class="c-green">+'+fmt(gEur*(1-TAX))+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+
+  // Top Holdings
+  h+='<div class="sec-label">Top-Holdings (Top 30)</div>';
+  h+='<div class="card"><div style="padding:10px 14px 14px">';
+  var holdings=calcHoldings(snap.etfs,30);
+  var hTotal=c.total; var sumPct=holdings.reduce(function(a,hx){return a+hx.pct;},0);
+  // Fix 4: sumPct header row FIRST
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">';
+  h+='<span style="font-size:11px;color:var(--muted)">Top '+holdings.length+' Positionen gesamt</span>';
+  h+='<span style="font-weight:700;color:var(--accent);font-size:14px">'+sumPct.toFixed(2)+'% &nbsp;<span style="font-size:10px;font-weight:400;color:var(--muted)">= '+fmt(sumPct/100*hTotal)+' von '+fmt(hTotal)+'</span></span>';
+  h+='</div>';
+  h+='<table style="table-layout:fixed;width:100%"><thead><tr>';
+  h+='<th style="width:30px">#</th>';
+  h+='<th style="width:auto">Titel</th>';
+  h+='<th style="width:80px">Sektor</th>';
+  h+='<th style="width:80px">Anteil</th>';
+  h+='<th style="width:70px">Balken</th>';
+  h+='<th style="width:160px">In ETFs</th>';
+  h+='</tr></thead><tbody>';
+  holdings.forEach(function(hh,i){
+    var col=SECTOR_COLORS[hh.s]||'var(--muted)';
+    var bw=Math.min(hh.pct/holdings[0].pct*100,100).toFixed(1);
+    var pills=hh.etfs.map(function(e){
+      return '<span style="display:inline-block;font-size:8.5px;padding:2px 5px;margin:1px 1px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis" title="'+e+'">'+e+'</span>';
+    }).join('');
+    var rkc=i<3?'var(--warn)':i<10?'var(--accent)':'var(--muted)';
+    h+='<tr><td style="font-weight:700;color:'+rkc+'">'+(i+1)+'</td>';
+    h+='<td><strong style="font-size:11px">'+hh.n+'</strong><br><span style="font-size:9px;color:var(--muted)">'+hh.t+'</span></td>';
+    h+='<td style="color:'+col+';font-size:10px">'+SECTOR_LABELS[hh.s]+'</td>';
+    h+='<td style="font-weight:700;color:var(--accent);font-size:11px">'+hh.pct.toFixed(2)+'%<br><span style="font-size:9px;color:var(--muted)">'+fmt(hh.pct/100*hTotal)+'</span></td>';
+    h+='<td><div style="background:var(--surface2);border-radius:3px;height:7px"><div style="width:'+bw+'%;height:100%;background:'+col+';border-radius:3px"></div></div></td>';
+    h+='<td style="vertical-align:top;padding-top:4px"><div style="display:flex;flex-wrap:wrap;gap:2px">'+pills+'</div></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // Rendite & Steuer - collapsible at bottom
+  h+='<div class="card" style="margin-bottom:14px">';
+  h+='<div id="rendite-toggle" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;user-select:none">';
+  h+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Rendite & Steuer (Details)</div>';
+  h+='<div id="rendite-chevron" style="font-size:18px;color:var(--muted);transition:transform .2s">&#8964;</div>';
+  h+='</div>';
+  h+='<div id="rendite-body" style="display:none;padding:0 16px 16px">';
+
+
+  h+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;padding:5px 10px;background:var(--surface);border-left:3px solid var(--accent);border-radius:0 5px 5px 0">A - Aktuelle Positionen (unrealisiert) - Brutto vor Steuer, Steuer erst bei Verkauf fallig</div>';
+  h+='<div class="kpi-row" style="margin-bottom:10px">';
+  h+='<div class="kpi"><label>Gewinn brutto</label><div class="val '+(c.gewinnEur>=0?'c-green':'c-danger')+'">'+(c.gewinnEur>=0?'+':'')+fmt(c.gewinnEur)+'</div><div class="sub">'+(c.gesamtPct>=0?'+':'')+c.gesamtPct.toFixed(2)+'% auf Einstand</div></div>';
+  h+='<div class="kpi"><label>Steuer (26,375%)</label><div class="val c-danger">-'+fmt(c.steuer)+'</div><div class="sub">bei Verkauf fallig</div></div>';
+  h+='<div class="kpi"><label>Gewinn netto</label><div class="val c-green">+'+fmt(c.netto)+'</div><div class="sub">'+(c.nettoPct>=0?'+':'')+c.nettoPct.toFixed(2)+'% auf Einstand</div></div>';
+  h+='<div class="kpi"><label>CAGR brutto p.a.</label><div class="val c-green">'+fmtP(c.cagr)+'</div><div class="sub">annualisiert - '+Math.round(c.avgMonate)+' Monate</div></div>';
+  h+='<div class="kpi"><label>CAGR netto p.a.</label><div class="val c-green">'+fmtP(cagrNetto)+'</div><div class="sub">annualisiert - nach Steuer</div></div>';
+  h+='</div>';
+
+  h+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;padding:5px 10px;background:var(--surface);border-left:3px solid var(--green);border-radius:0 5px 5px 0">B - Realisiert und Kapitalertrage (automatisch aus CSV)</div>';
+  h+='<div class="kpi-row" style="margin-bottom:10px">';
+  h+='<div class="kpi"><label>Realisierte Gewinne</label><div class="val c-green">+'+fmt(CSV_REALIZED_TOTAL)+'</div><div class="sub">aus Verkaufen - bereits netto</div></div>';
+  h+='<div class="kpi"><label>Zinsen (netto)</label><div class="val c-green">+'+fmt(CSV_ZINSEN_TOTAL)+'</div><div class="sub">nach Quellensteuer</div></div>';
+  h+='<div class="kpi"><label>Dividenden (netto)</label><div class="val c-green">+'+fmt(CSV_DIVIDENDEN_TOTAL)+'</div><div class="sub">Caterpillar</div></div>';
+  h+='</div>';
+
+  var gesamtEinstand = c.einstand;
+  var gesamtBruttoPct = gesamtEinstand>0 ? gesamtBrutto/gesamtEinstand*100 : 0;
+  var gesamtNettoPct  = gesamtEinstand>0 ? gesamtNetto/gesamtEinstand*100  : 0;
+  var cagrGesamt      = gesamtEinstand>0&&c.avgMonate>0 ? (Math.pow((gesamtEinstand+gesamtBrutto)/gesamtEinstand,12/c.avgMonate)-1)*100 : 0;
+  var cagrGesamtNetto = gesamtEinstand>0&&c.avgMonate>0 ? (Math.pow((gesamtEinstand+gesamtNetto)/gesamtEinstand,12/c.avgMonate)-1)*100  : 0;
+
+  h+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;padding:5px 10px;background:var(--surface);border-left:3px solid var(--warn);border-radius:0 5px 5px 0">C - Gesamtbild Portfolio (A + B) - Brutto vor Steuer / Netto nach Steuer - TR zeigt Wert nach bereits abgefuhrten Steuern (~412 weniger)</div>';
+  h+='<div class="kpi-row" style="margin-bottom:24px">';
+  h+='<div class="kpi" style="border-color:rgba(76,175,135,.4)"><label>Gesamtgewinn brutto</label><div class="val c-green">+'+fmt(gesamtBrutto)+'</div><div class="sub">'+fmtP(gesamtBruttoPct)+' auf Einstand</div></div>';
+  h+='<div class="kpi"><label>CAGR gesamt brutto p.a.</label><div class="val c-green">'+fmtP(cagrGesamt)+'</div><div class="sub">annualisiert auf Einstand</div></div>';
+  h+='<div class="kpi"><label>Steuer Gesamt (26,375%)</label><div class="val c-danger">-'+fmt(gesamtSteuer)+'</div><div class="sub">auf Gesamtgewinn brutto</div></div>';
+  h+='<div class="kpi" style="border-color:rgba(76,175,135,.4)"><label>Gesamtgewinn netto</label><div class="val c-green">+'+fmt(gesamtNetto)+'</div><div class="sub">'+fmtP(gesamtNettoPct)+' auf Einstand</div></div>';
+  h+='<div class="kpi"><label>CAGR gesamt netto p.a.</label><div class="val c-green">'+fmtP(cagrGesamtNetto)+'</div><div class="sub">annualisiert - nach Steuer</div></div>';
+  h+='<div class="kpi"><label>TR Referenz</label><div class="val" style="color:var(--muted)">3.513 EUR</div><div class="sub">inkl. bereits verst. Ertrage</div></div>';
+  h+='</div>';
+
+
+  h+='</div></div>';
+
+  h+='<div class="info-box"><strong>S1</strong> = offizieller IT-Sektor (GICS). <strong>S2</strong> = S1 + Kommunikation + tech-adjacent. S2 beinhaltet S1.</div>';
+  el.innerHTML=h;
+}
+
+// ── ENTWICKLUNG ───────────────────────────────────────────────────────
+function getSnapForPeriod(months) {
+  if(snapshots.length<2) return null;
+  var latest=snapshots[snapshots.length-1];
+  var target=new Date(latest.date); target.setMonth(target.getMonth()-months);
+  var best=null,bestD=Infinity;
+  for(var i=0;i<snapshots.length-1;i++){
+    var d=Math.abs(new Date(snapshots[i].date)-target);
+    if(d<bestD){bestD=d;best=snapshots[i];}
+  }
+  return best&&bestD<45*86400000?{from:best,to:snapshots[snapshots.length-1]}:null;
+}
+
+function renderEntwicklung() {
+  var el=document.getElementById('tab-entwicklung');
+  if(!snapshots.length){el.innerHTML='<div class="no-data">Keine Daten vorhanden.</div>';return;}
+  var snap=snapshots[snapshots.length-1];
+  var total=snap.etfs.reduce(function(a,e){return a+e.wert;},0);
+  var period=PERIODS[activePeriod];
+  var pair=getSnapForPeriod(period.m);
+  var manual=manualData[period.l]||{};
+
+  var btnH='';
+  PERIODS.forEach(function(p,i){
+    var has=!!getSnapForPeriod(p.m)||Object.keys(manualData[p.l]||{}).length>0;
+    btnH+='<button class="period-btn'+(i===activePeriod?' active':'')+'" data-period="'+i+'">'+(has?'● ':'')+p.l+'</button>';
+  });
+
+  var etfData=snap.etfs.map(function(e){
+    var gPct=null,src='none';
+    if(pair){var fe=pair.from.etfs.filter(function(x){return x.isin===e.isin;})[0];if(fe){gPct=(e.gewinnPct||0)-(fe.gewinnPct||0);src='snapshot';}}
+    if(src==='none'&&manual[e.isin]!==undefined){gPct=manual[e.isin];src='manual';}
+    return {name:e.name,isin:e.isin,wert:e.wert,gewinnPct:e.gewinnPct,gewinnEur:e.gewinnEur,monate:e.monate,einstand:e.einstand,firstBuy:e.firstBuy,pGewinn:gPct,src:src};
+  });
+
+  var known=etfData.filter(function(e){return e.pGewinn!==null;});
+  var totPct=known.length?known.reduce(function(a,e){return a+(e.wert/total)*e.pGewinn;},0):null;
+  var ann=totPct!==null?totPct/period.m*12:null;
+
+  var h='<div class="period-bar">'+btnH+'</div>';
+  h+='<div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">';
+  h+=pair?'Snapshot-Daten ('+pair.from.date+' → '+pair.to.date+')':Object.keys(manual).length?'Manuell eingetragen':'Keine Daten';
+  if(ann!==null) h+=' · Ø p.a.: <strong style="color:var(--accent)">'+ann.toFixed(2)+'%</strong>';
+  h+='</div>';
+
+  if(totPct!==null){
+    h+='<div class="pscard">';
+    h+='<div class="pscard-item"><label>Portfolio</label><div class="big c-accent">'+fmt(total)+'</div><div class="small">Stand '+snap.date+'</div></div>';
+    h+='<div class="pscard-item"><label>Gewinn in '+period.l+'</label><div class="big c-green">'+fmtP(totPct)+'</div><div class="small">'+fmt(Math.abs(totPct/100*total))+'</div></div>';
+    if(ann!==null) h+='<div class="pscard-item"><label>Ø p.a.</label><div class="big" style="color:var(--warn)">'+ann.toFixed(2)+'%</div><div class="small">linear</div></div>';
+    h+='</div>';
+  }
+
+  etfData.forEach(function(e){
+    var gw=(e.wert/total*100).toFixed(1);
+    var hasV=e.pGewinn!==null; var pos=hasV&&e.pGewinn>=0;
+    var bw=hasV?Math.min(Math.abs(e.pGewinn)/30*100,100).toFixed(1):0;
+    var srcLbl=e.src==='snapshot'?'<span style="font-size:9px;color:var(--green)">Snapshot</span>':e.src==='manual'?'<span style="font-size:9px;color:var(--warn)">Manuell</span>':'<span style="font-size:9px;color:var(--muted)">Keine Daten</span>';
+    h+='<div class="etf-growth-card">';
+    h+='<div class="etf-growth-header"><div><div class="etf-growth-name">'+e.name+' '+srcLbl+'</div><div style="font-size:10px;color:var(--muted)">'+gw+'% PF</div></div>';
+    if(hasV) h+='<div style="text-align:right"><div class="etf-growth-val '+(pos?'c-green':'c-danger')+'">'+fmtP(e.pGewinn)+'</div><div style="font-size:11px;color:var(--muted)">'+(pos?'+':'')+fmt(e.wert*e.pGewinn/100)+'</div></div>';
+    else h+='<div style="color:var(--muted)">– keine Daten –</div>';
+    h+='</div>';
+    if(hasV) h+='<div class="growth-track"><div class="growth-fill'+(pos?'':' neg')+'" style="width:'+bw+'%"></div></div>';
+    h+='<div class="etf-growth-meta">';
+    h+='<span>Gewinn gesamt: <strong class="c-green">+'+(e.gewinnPct||0).toFixed(2)+'%</strong></span>';
+    if(e.einstand>0){
+      h+='<span>Einstand: <strong>'+fmt(e.einstand)+'</strong></span>';
+      if(e.monate>0){var ec=((Math.pow(e.wert/e.einstand,12/e.monate)-1)*100).toFixed(2);h+='<span>CAGR: <strong style="color:var(--warn)">'+ec+'% p.a.</strong></span>';}
+    }
+    h+='<span>Gehalten: <strong>'+(e.monate||0)+' M</strong></span>';
+    h+='</div></div>';
+  });
+
+  if(!pair){
+    h+='<div class="form-card" style="margin-top:14px"><h3>Trade Republic Werte eintragen – '+period.l+'</h3>';
+    h+='<p style="font-size:11px;color:var(--muted);margin-bottom:12px">Gewinn % aus TR fuer diesen Zeitraum.</p>';
+    h+='<table style="width:100%;border-collapse:collapse"><thead><tr><th>ETF</th><th>ISIN</th><th>Gewinn %</th></tr></thead><tbody>';
+    snap.etfs.forEach(function(e){
+      h+='<tr><td style="padding:5px 8px;font-size:11px">'+e.name+'</td><td style="padding:5px 8px;font-size:10px;color:var(--muted)">'+e.isin+'</td>';
+      h+='<td style="padding:5px 8px"><input class="finput manual-inp" data-isin="'+e.isin+'" type="number" step="0.01" placeholder="z.B. 22.84" value="'+(manual[e.isin]!==undefined?manual[e.isin]:'')+'" style="width:120px"></td></tr>';
+    });
+    h+='</tbody></table>';
+    h+='<div class="btn-row"><button class="btn btn-primary" data-action="saveManual" data-plabel="'+period.l+'">Speichern</button><button class="btn btn-secondary" data-action="clearManual" data-plabel="'+period.l+'">Loeschen</button></div>';
+    h+='</div>';
+  }
+
+  el.innerHTML=h;
+}
+
+// ── PERIODENVERGLEICH ─────────────────────────────────────────────────
+function renderVergleich() {
+  var el=document.getElementById('tab-vergleich');
+  if(snapshots.length<2){el.innerHTML='<div class="no-data">Mindestens 2 Perioden benoetigt.</div>';return;}
+  var s1=snapshots[snapshots.length-2], s2=snapshots[snapshots.length-1];
+  var c1=calcSnap(s1), c2=calcSnap(s2);
+  var rows=[
+    ['Portfolio-Wert',fmt(c1.total),fmt(c2.total),c2.total-c1.total,false,'EUR'],
+    ['S1 IT',c1.s1pct.toFixed(1)+'%',c2.s1pct.toFixed(1)+'%',c2.s1pct-c1.s1pct,true,'pp'],
+    ['S2 adj.',c1.s2pct.toFixed(1)+'%',c2.s2pct.toFixed(1)+'%',c2.s2pct-c1.s2pct,true,'pp'],
+    ['Gewinn brutto',fmt(c1.gewinnEur),fmt(c2.gewinnEur),c2.gewinnEur-c1.gewinnEur,false,'EUR'],
+    ['Gewinn netto',fmt(c1.netto),fmt(c2.netto),c2.netto-c1.netto,false,'EUR'],
+    ['CAGR brutto',c1.cagr.toFixed(2)+'%',c2.cagr.toFixed(2)+'%',c2.cagr-c1.cagr,false,'pp'],
+  ];
+  var h='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600">'+(s1.note||s1.date)+' → '+(s2.note||s2.date)+'</div></div>';
+  h+='<div class="card"><table><thead><tr><th>Kennzahl</th><th>'+s1.date+'</th><th>'+s2.date+'</th><th>Veraenderung</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var delta=r[3],negGood=r[4],unit=r[5];
+    var better=negGood?delta<=0:delta>=0;
+    var cls=delta===0?'color:var(--muted)':better?'color:var(--green)':'color:var(--danger)';
+    var arrow=delta>0?'▲ +':delta<0?'▼ ':'→ ';
+    var dv=unit==='EUR'?arrow+fmt(Math.abs(delta)):arrow+Math.abs(delta).toFixed(2)+' '+unit;
+    h+='<tr><td><strong>'+r[0]+'</strong></td><td style="color:var(--muted)">'+r[1]+'</td><td>'+r[2]+'</td><td style="'+cls+';font-weight:600">'+dv+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="card"><table><thead><tr><th>ETF</th><th>'+s1.date+'</th><th>'+s2.date+'</th><th>Delta Wert</th><th>Gewinn vorher</th><th>Gewinn nachher</th><th>Delta</th></tr></thead><tbody>';
+  s2.etfs.forEach(function(e2){
+    var e1=(s1.etfs||[]).filter(function(x){return x.isin===e2.isin;})[0]; if(!e1) return;
+    var dw=e2.wert-e1.wert, dg=(e2.gewinnPct||0)-(e1.gewinnPct||0);
+    h+='<tr><td><strong>'+e2.name+'</strong></td><td style="color:var(--muted)">'+fmt(e1.wert)+'</td><td>'+fmt(e2.wert)+'</td>';
+    h+='<td class="'+(dw>=0?'c-green':'c-danger')+'">'+(dw>=0?'▲ +':'▼ ')+fmt(Math.abs(dw))+'</td>';
+    h+='<td style="color:var(--muted)">+'+((e1.gewinnPct||0).toFixed(2))+'%</td><td class="c-green">+'+((e2.gewinnPct||0).toFixed(2))+'%</td>';
+    h+='<td class="'+(dg>=0?'c-green':'c-danger')+'">'+(dg>=0?'+':'')+dg.toFixed(2)+'pp</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  el.innerHTML=h;
+}
+
+// ── SIMULATION ────────────────────────────────────────────────────────
+function renderSimulation() {
+  var el=document.getElementById('tab-simulation');
+  if(!snapshots.length){el.innerHTML='<div class="no-data">Keine Daten vorhanden.</div>';return;}
+  var snap=snapshots[snapshots.length-1];
+  var total=snap.etfs.reduce(function(a,e){return a+e.wert;},0);
+
+  var etfRows='';
+  snap.etfs.forEach(function(e){
+    var w=(e.wert/total*100).toFixed(1);
+    var opts=PRIO.map(function(p){return '<option value="'+p.v+'"'+(p.v==='neutral'?' selected':'')+'>'+p.l+'</option>';}).join('');
+    etfRows+='<div class="sim-etf-row">';
+    etfRows+='<div style="width:120px;font-size:11px">'+e.name+'<div style="font-size:9px;color:var(--muted)">'+w+'% · '+fmt(e.wert)+'</div></div>';
+    etfRows+='<select class="csel sim-prio" data-isin="'+e.isin+'" style="flex:1">'+opts+'</select>';
+    etfRows+='<div class="sim-etf-res" data-isin="'+e.isin+'" style="width:100px;text-align:right;font-size:10px;color:var(--muted)">–</div>';
+    etfRows+='</div>';
+  });
+
+  var sLimRows='';
+  var secLimDefs=[
+    {k:'IT',l:'IT-Sektor (S1)',v:'20'},
+    {k:'Komm',l:'Kommunikation (S2)',v:''},
+    {k:'Finanzen',l:'Finanzen',v:''},
+    {k:'Gesundheit',l:'Gesundheitswesen',v:''},
+    {k:'Industrie',l:'Industrie',v:''},
+    {k:'KonsumZykl',l:'Konsumg. (zyklisch)',v:''},
+    {k:'KonsumBasis',l:'Basiskonsumgueter',v:''},
+    {k:'Energie',l:'Energie',v:''},
+    {k:'Rohstoffe',l:'Rohstoffe',v:''},
+    {k:'Versorger',l:'Versorger',v:''},
+    {k:'Immobilien',l:'Immobilien',v:''},
+  ];
+  secLimDefs.forEach(function(d){
+    sLimRows+='<div class="lim-row"><div class="lim-label">'+d.l+'</div><input class="clim sim-s-lim" data-sec="'+d.k+'" type="number" min="0" max="100" '+(d.v?'value="'+d.v+'"':'placeholder="–"')+'></div>';
+  });
+
+  var h='<div class="sim-grid">';
+  // Left
+  h+='<div class="sim-card"><h3>ETF-Priorisierung & Betrag</h3>';
+  h+='<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Gesamtbetrag</div>';
+  h+='<div style="display:flex;align-items:center;gap:8px"><input id="sim-total" type="number" value="2200" min="0" step="100" class="finput" style="width:110px;font-size:15px;font-weight:700;border-color:var(--accent)"><span style="color:var(--muted)">EUR</span></div></div>';
+  h+='<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Verteilung</div>';
+  h+='<div style="display:flex;gap:6px"><button id="dist-equal" class="btn" style="flex:1;background:var(--accent);color:#fff;font-size:11px">Gleichmaessig</button>';
+  h+='<button id="dist-prop" class="btn btn-secondary" style="flex:1;font-size:11px">Proportional</button></div></div>';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">ETF auswählen</div>';
+  h+=etfRows;
+  h+='<div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;font-size:12px">';
+  h+='<span style="color:var(--muted)">Geplant:</span><span id="sim-planned" style="font-weight:700;color:var(--accent)">0 EUR</span></div>';
+  h+='<div style="font-size:10px;color:var(--muted);margin-top:7px">Sperren=0x · Reduz.=0.5x · Neutral=1x · Foerdern=2x · Stark=3x</div>';
+  h+='</div>';
+  // Right
+  h+='<div class="sim-card" style="overflow-y:auto;max-height:680px"><h3>Limits nach Kauf</h3>';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">Regionen</div>';
+  h+='<div class="lim-row"><div class="lim-label">USA max. %</div><input class="clim" id="lim-usa" type="number" value="40" min="0" max="100"></div>';
+  h+='<div class="lim-row"><div class="lim-label">Europa max. %</div><input class="clim" id="lim-europa" type="number" placeholder="–" min="0" max="100"></div>';
+  h+='<div class="lim-row"><div class="lim-label">Japan max. %</div><input class="clim" id="lim-japan" type="number" placeholder="–" min="0" max="100"></div>';
+  h+='<div class="lim-row"><div class="lim-label">Schwellenlaender max. %</div><input class="clim" id="lim-em" type="number" value="20" min="0" max="100"></div>';
+  h+='<div class="lim-row"><div class="lim-label">Sonstige max. %</div><input class="clim" id="lim-sonstige" type="number" placeholder="–" min="0" max="100"></div>';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 7px">Alle 11 GICS-Sektoren</div>';
+  h+=sLimRows;
+  h+='</div></div>';
+  h+='<div id="sim-result"></div>';
+  el.innerHTML=h;
+  updateSim(snap.etfs);
+}
+
+function getV(id){var e=document.getElementById(id);if(!e||e.value==='')return null;var v=parseFloat(e.value);return isNaN(v)?null:v;}
+
+function computeAlloc(etfs) {
+  var inv=parseFloat(document.getElementById('sim-total').value)||0;
+  var total=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var factors={};
+  document.querySelectorAll('.sim-prio').forEach(function(s){
+    var pr=PRIO.filter(function(p){return p.v===s.value;})[0]||PRIO[2];
+    factors[s.getAttribute('data-isin')]=pr.f;
+  });
+  var tw=0;
+  etfs.forEach(function(e){var base=distMode==='equal'?1:e.wert/total;tw+=base*(factors[e.isin]||0);});
+  var alloc={};
+  etfs.forEach(function(e){var base=distMode==='equal'?1:e.wert/total;alloc[e.isin]=tw>0?inv*(base*(factors[e.isin]||0)/tw):0;});
+  return {alloc:alloc,total:inv};
+}
+
+function updateSim(etfs) {
+  var res=computeAlloc(etfs);
+  var alloc=res.alloc;
+  var inv=res.total;
+  var totalB=etfs.reduce(function(a,e){return a+e.wert;},0);
+  var totalA=etfs.reduce(function(a,e){return a+e.wert+(alloc[e.isin]||0);},0);
+  var pl=document.getElementById('sim-planned');
+  if(pl) pl.textContent=fmt(inv).replace('€','')+'EUR';
+  // Update per-ETF display
+  etfs.forEach(function(e){
+    var add=alloc[e.isin]||0;
+    var rd=document.querySelector('.sim-etf-res[data-isin="'+e.isin+'"]');
+    if(!rd) return;
+    var prio=document.querySelector('.sim-prio[data-isin="'+e.isin+'"]');
+    var pv=prio?prio.value:'neutral';
+    var pr=PRIO.filter(function(p){return p.v===pv;})[0]||PRIO[2];
+    if(add>0) rd.innerHTML='<span style="color:'+pr.c+';font-weight:600">+'+fmt(add)+'</span><br>+'+(add/totalB*100).toFixed(1)+'% PF';
+    else rd.textContent='–';
+  });
+  // Build sim etfs
+  var simEtfs=etfs.map(function(e){return {name:e.name,isin:e.isin,wert:e.wert+(alloc[e.isin]||0)};});
+  var geoB=calcGeo(etfs),geoA=calcGeo(simEtfs);
+  var secB=calcSectors(etfs),secA=calcSectors(simEtfs);
+  var s1B=etfs.reduce(function(a,e){var t=TECH[e.isin]||{s1:0};return a+e.wert*t.s1/100;},0)/totalB*100;
+  var s1A=simEtfs.reduce(function(a,e){var t=TECH[e.isin]||{s1:0};return a+e.wert*t.s1/100;},0)/totalA*100;
+  var s2B=etfs.reduce(function(a,e){var t=TECH[e.isin]||{s1:0,s2a:0};return a+e.wert*(t.s1+t.s2a)/100;},0)/totalB*100;
+  var s2A=simEtfs.reduce(function(a,e){var t=TECH[e.isin]||{s1:0,s2a:0};return a+e.wert*(t.s1+t.s2a)/100;},0)/totalA*100;
+  var warns=[];
+  var limU=getV('lim-usa'),limE=getV('lim-europa'),limJ=getV('lim-japan'),limEM=getV('lim-em'),limS=getV('lim-sonstige');
+  if(limU!==null&&geoA.USA>limU) warns.push('USA '+geoA.USA.toFixed(1)+'% > '+limU+'%');
+  if(limE!==null&&geoA.Europa>limE) warns.push('Europa '+geoA.Europa.toFixed(1)+'% > '+limE+'%');
+  if(limJ!==null&&geoA.Japan>limJ) warns.push('Japan '+geoA.Japan.toFixed(1)+'% > '+limJ+'%');
+  if(limEM!==null&&geoA.EM>limEM) warns.push('EM '+geoA.EM.toFixed(1)+'% > '+limEM+'%');
+  if(limS!==null&&geoA.Sonstige>limS) warns.push('Sonstige '+geoA.Sonstige.toFixed(1)+'% > '+limS+'%');
+  document.querySelectorAll('.sim-s-lim').forEach(function(inp){
+    var k=inp.getAttribute('data-sec'); var lim=parseFloat(inp.value);
+    if(!isNaN(lim)&&(secA[k]||0)>lim) warns.push(SECTOR_LABELS[k]+' '+(secA[k]||0).toFixed(1)+'% > '+lim+'%');
+  });
+  var allOk=warns.length===0;
+  var scale=50;
+  function simBar(b,a,col,lim){
+    var bB=Math.min(b/scale*100,100).toFixed(1);
+    var bA=Math.min(a/scale*100,100).toFixed(1);
+    var bL=lim!==null?Math.min(lim/scale*100,100).toFixed(1):null;
+    var over=lim!==null&&a>lim;
+    return '<div class="sim-bar"><div class="sim-bar-b" style="width:'+bB+'%"></div><div class="sim-bar-a" style="width:'+bA+'%;background:'+(over?'var(--danger)':col)+'"></div>'+(bL?'<div class="sim-bar-lim" style="left:'+bL+'%"></div>':'')+'</div>';
+  }
+  function cmpRow(lbl,b,a,col,lim){
+    var d=a-b,over=lim!==null&&a>lim;
+    var dC=d>0.05?'var(--green)':d<-0.05?'var(--danger)':'var(--muted)';
+    return '<div class="sim-cmp-row"><span>'+lbl+(over?'<span class="warn-badge" style="margin-left:4px">⚠</span>':'')+'</span>'+simBar(b,a,col,lim)+'<span style="color:var(--muted);text-align:right">'+b.toFixed(1)+'%</span><span style="color:'+(over?'var(--danger)':col)+';font-weight:600;text-align:right">'+a.toFixed(1)+'%</span><span style="color:'+dC+';text-align:right">'+(d>=0?'+':'')+d.toFixed(1)+'</span></div>';
+  }
+
+  var pills='';
+  if(inv>0){etfs.forEach(function(e){var add=alloc[e.isin]||0;if(add<=0) return;var prio=document.querySelector('.sim-prio[data-isin="'+e.isin+'"]');var pv=prio?prio.value:'neutral';var pr=PRIO.filter(function(p){return p.v===pv;})[0]||PRIO[2];pills+='<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:10px">'+e.name+' <span style="color:'+pr.c+'">'+pr.l+'</span>: <strong class="c-green">+'+fmt(Math.round(add))+'</strong></div>';});}
+
+  var h='<div class="sim-result">';
+  h+='<h3>Simulation Nachkauf'+(inv>0?' <span style="font-size:11px;color:var(--muted);font-weight:400">+'+fmt(inv)+' → '+fmt(Math.round(totalA))+' gesamt</span>':'')+(allOk&&inv>0?'<span class="ok-badge">Alle Limits OK</span>':'')+'</h3>';
+  if(warns.length) h+='<div class="warn-box">'+warns.join(' · ')+'</div>';
+  if(pills) h+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">'+pills+'</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:7px">';
+  h+='<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">Portfolio nach Kauf</div><div style="font-size:18px;font-weight:700;color:var(--accent)">'+fmt(Math.round(totalA))+'</div></div>';
+  h+='<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">S1 nach Kauf</div><div style="font-size:18px;font-weight:700;color:'+(s1A<=20?'var(--green)':'var(--danger)')+'">'+s1A.toFixed(1)+'%</div></div>';
+  h+='<div><div style="font-size:9px;color:var(--muted);text-transform:uppercase">S2 nach Kauf</div><div style="font-size:18px;font-weight:700;color:'+(s2A<=30?'var(--warn)':'var(--danger)')+'">'+s2A.toFixed(1)+'%</div></div>';
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:5px">Tech S1/S2</div>';
+  h+='<div style="margin-bottom:14px"><div class="sim-cmp-row hdr"><span>Schicht</span><span>Verlauf</span><span style="text-align:right">Vorher</span><span style="text-align:right">Nachher</span><span style="text-align:right">Delta</span></div>';
+  h+=cmpRow('S1 – IT offiziell',s1B,s1A,'var(--s1)',getV('lim-s-it')||20);
+  h+=cmpRow('S2 – IT + Komm.',s2B,s2A,'var(--s2)',null);
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:5px">Regionen</div>';
+  h+='<div style="margin-bottom:14px"><div class="sim-cmp-row hdr"><span>Region</span><span>Verlauf</span><span style="text-align:right">Vorher</span><span style="text-align:right">Nachher</span><span style="text-align:right">Delta</span></div>';
+  h+=cmpRow('USA',geoB.USA,geoA.USA,'#4f8ef7',limU);
+  h+=cmpRow('Europa',geoB.Europa,geoA.Europa,'#4caf87',limE);
+  h+=cmpRow('Japan',geoB.Japan,geoA.Japan,'#e8a838',limJ);
+  h+=cmpRow('China',geoB.China,geoA.China,'#dc5050',0);
+  h+=cmpRow('EM Rest',geoB.EM_Rest,geoA.EM_Rest,'#7c5cbf',limEM);
+  h+=cmpRow('Sonstige',geoB.Sonstige,geoA.Sonstige,'#7a8099',limS);
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:5px">Alle 11 Sektoren</div>';
+  h+='<div><div class="sim-cmp-row hdr"><span>Sektor</span><span>Verlauf</span><span style="text-align:right">Vorher</span><span style="text-align:right">Nachher</span><span style="text-align:right">Delta</span></div>';
+  var sKeys2=Object.keys(SECTOR_LABELS).sort(function(a,b){return (secA[b]||0)-(secA[a]||0);});
+  sKeys2.forEach(function(k){
+    var b=secB[k]||0,a=secA[k]||0;
+    var lim=null;
+    document.querySelectorAll('.sim-s-lim').forEach(function(inp){if(inp.getAttribute('data-sec')===k)lim=parseFloat(inp.value)||null;});
+    h+=cmpRow(SECTOR_LABELS[k],b,a,SECTOR_COLORS[k]||'var(--muted)',lim);
+  });
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:5px;margin-top:14px">ETF-Anteile</div>';
+  h+='<div><div class="sim-cmp-row hdr"><span>ETF</span><span>Verlauf</span><span style="text-align:right">Vorher</span><span style="text-align:right">Nachher</span><span style="text-align:right">Invest</span></div>';
+  etfs.forEach(function(e){
+    var add=alloc[e.isin]||0;
+    var wB=e.wert/totalB*100,wA=(e.wert+add)/totalA*100;
+    h+=cmpRow(e.name,wB,wA,'var(--accent)',null).replace('</div>','<span style="font-size:10px;text-align:right;color:'+(add>0?'var(--green)':'var(--muted)')+'">'+( add>0?'+'+fmt(Math.round(add)):'–')+'</span></div>');
+  });
+  h+='</div></div>';
+  document.getElementById('sim-result').innerHTML=h;
+}
+
+// ── ERFASSEN ─────────────────────────────────────────────────────────
+function renderErfassen() {
+  var el=document.getElementById('tab-erfassen');
+  var today=new Date().toISOString().split('T')[0];
+  var prev=snapshots.length?snapshots[snapshots.length-1]:null;
+  var h='<div class="info-box"><strong>Zwei Werte je Position aus der TR-App eintragen:</strong> 1) Aktueller Wert (EUR) 2) Gewinn in EUR (absolut) – beide direkt in der TR-App sichtbar. Kein Umrechnen, kein Runden – exakt wie TR.</div>';
+  h+='<div class="form-card"><h3>Daten importieren</h3>';
+  h+='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+  h+='<label style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px">CSV hochladen <input type="file" id="csv-upload" accept=".csv" style="display:none"></label>';
+  h+='<label style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:rgba(79,142,247,.15);border:1px solid var(--accent);border-radius:6px;cursor:pointer;font-size:12px;color:var(--accent)">Screenshot hochladen (TR-App) <input type="file" id="screenshot-upload" accept="image/*" style="display:none"></label>';
+  h+='</div>';
+  h+='<div id="csv-status" style="font-size:11px;color:var(--green)">CSV: 06.09.2026 - 8 Positionen</div>';
+  h+='<div id="screenshot-status" style="font-size:11px;color:var(--muted);margin-top:3px"></div>';
+  h+='<div id="screenshot-preview" style="margin-top:6px"></div>';
+  h+='</div>';
+  h+='<div class="form-card"><h3>Neuen Snapshot erfassen</h3>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">';
+  h+='<div class="field"><label>Datum</label><input type="date" id="f-date" value="'+today+'"></div>';
+  h+='<div class="field"><label>Notiz (optional)</label><input type="text" id="f-note" placeholder="z.B. Q3 2026"></div></div>';
+  h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;min-width:600px"><thead><tr>';
+  ['Position','ISIN','Wert EUR + Gewinn EUR (TR-App)','Anteile','Einstand (CSV)','Ø Kurs','Erstkauf','Monate'].forEach(function(t){
+    h+='<th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2)">'+t+'</th>';
+  });
+  h+='</tr></thead><tbody id="erfassen-body"></tbody></table>';
+  h+='<div style="font-size:10px;color:var(--muted);margin:10px 0">Gewinn EUR und % werden automatisch aus (Wert − Einstand) berechnet.</div>';
+  h+='<div class="btn-row"><button class="btn btn-primary" id="btn-save-snap">Snapshot speichern</button><button class="btn btn-secondary" id="btn-add-row">+ Manuelle Position</button></div>';
+  h+='</div>';
+  el.innerHTML=h;
+  buildErfassenRows(prev);
+}
+
+function buildErfassenRows(prev) {
+  var tbody=document.getElementById('erfassen-body'); if(!tbody) return;
+  var rows='';
+  Object.values(CSV_IMPORT).forEach(function(pos){
+    var pw=prev?(prev.etfs||[]).filter(function(e){return e.isin===pos.isin;})[0]:null;
+    var pv=pw?pw.wert:'';
+    rows+='<tr class="csv-row" data-isin="'+pos.isin+'">';
+    rows+='<td style="padding:6px 10px;font-size:11px;font-weight:600">'+pos.name+'</td>';
+    rows+='<td style="padding:6px 10px;font-size:9px;color:var(--muted)">'+pos.isin+'</td>';
+    var pgeur = pw ? pw.gewinnEur||'' : '';
+    rows+='<td style="padding:6px 10px">';
+    rows+='<input class="finput f-wert" type="number" step="0.01" placeholder="Wert EUR" value="'+pv+'" data-isin="'+pos.isin+'" style="width:95px;border-color:var(--accent);margin-bottom:3px">';
+    rows+='<br><input class="finput f-geur" type="number" step="0.01" placeholder="Gewinn EUR" value="'+pgeur+'" data-isin="'+pos.isin+'" style="width:95px;border-color:var(--warn)" title="Gewinn EUR direkt aus TR-App">';
+    rows+='<div class="calc-hint" data-isin="'+pos.isin+'" style="font-size:9px;margin-top:2px"></div></td>';
+    rows+='<td style="padding:6px 10px;font-size:10px;color:var(--muted)">'+pos.netShares.toFixed(4)+'</td>';
+    rows+='<td style="padding:6px 10px;font-size:10px;color:var(--muted)">'+fmt(pos.einstand)+'</td>';
+    rows+='<td style="padding:6px 10px;font-size:10px;color:var(--muted)">'+pos.avgPrice.toFixed(2)+'EUR</td>';
+    rows+='<td style="padding:6px 10px;font-size:10px;color:var(--muted)">'+pos.firstBuy+'</td>';
+    rows+='<td style="padding:6px 10px;font-size:10px;color:var(--muted)">'+pos.monate+'M</td>';
+    rows+='</tr>';
+  });
+  tbody.innerHTML=rows;
+}
+
+function addManualRow() {
+  var tbody=document.getElementById('erfassen-body'); if(!tbody) return;
+  var tr=document.createElement('tr');
+  tr.className='manual-row';
+  tr.innerHTML='<td style="padding:6px 10px"><input class="finput f-mn" placeholder="Name" style="width:90px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-mi" placeholder="ISIN" style="width:110px;font-size:10px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-mw" type="number" step="0.01" placeholder="Wert" style="width:90px;border-color:var(--accent)"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-ms" type="number" step="0.0001" placeholder="Anteile" style="width:70px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-me" type="number" step="0.01" placeholder="Einstand" style="width:80px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-ma" type="number" step="0.01" placeholder="Kurs" style="width:60px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-mf" type="date" style="width:120px"></td>'+
+    '<td style="padding:6px 10px"><input class="finput f-mm" type="number" step="1" placeholder="M" style="width:50px"><button class="btn-danger-sm" style="margin-left:4px" data-action="remove-row">X</button></td>';
+  tbody.appendChild(tr);
+}
+
+async function handleScreenshot(file) {
+  var statusEl = document.getElementById("screenshot-status");
+  var previewEl = document.getElementById("screenshot-preview");
+  if(!statusEl) return;
+  var url = URL.createObjectURL(file);
+  if(previewEl) {
+    previewEl.innerHTML = "<img src=\""+url+"\" style=\"max-width:100%;max-height:220px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px\">";
+  }
+  statusEl.style.color = "var(--accent)";
+  statusEl.innerHTML = "<strong>Screenshot geladen.</strong> Lade das gleiche Bild im Chat hoch und schreibe: Extrahiere die Depotwerte als JSON. Dann JSON unten einfugen:";
+  if(previewEl) {
+    previewEl.innerHTML += "<div style=\"margin-top:8px\">"
+      +"<textarea id=\"json-paste\" placeholder=\"[{name:MSCI World, wert:11810.66, gewinnEur:1636.90},...]\" "
+      +"style=\"width:100%;height:80px;background:var(--surface2);border:1px solid var(--accent);border-radius:6px;"
+      +"padding:8px;color:var(--text);font-size:11px;resize:vertical;outline:none;display:block;margin-bottom:6px\"></textarea>"
+      +"<button id=\"btn-import-json\" style=\"padding:7px 14px;background:var(--accent);color:#fff;border:none;"
+      +"border-radius:6px;cursor:pointer;font-size:12px;font-weight:500\">JSON importieren</button>"
+      +"</div>";
+  }
+}
+
+function importFromJSON() {
+  var ta = document.getElementById("json-paste");
+  var statusEl = document.getElementById("screenshot-status");
+  if(!ta||!ta.value.trim()){toast("Bitte JSON einfugen",true);return;}
+  try {
+    var text = ta.value.trim().split("```json").join("").split("```").join("").trim();
+    var positions = JSON.parse(text);
+    var matched = 0;
+    positions.forEach(function(pos){
+      var posName = (pos.name||"").toLowerCase();
+      document.querySelectorAll(".csv-row").forEach(function(tr){
+        var nc = tr.querySelector("td:first-child");
+        if(!nc) return;
+        var rowName = nc.textContent.trim().toLowerCase();
+        var words = rowName.split(" ").filter(function(w){return w.length>=4;});
+        var hit = words.some(function(w){return posName.indexOf(w)>=0;});
+        if(!hit&&pos.isin){var ic=tr.querySelector("td:nth-child(2)");if(ic&&ic.textContent.trim()===pos.isin)hit=true;}
+        if(hit){
+          var we=tr.querySelector(".f-wert"),ge=tr.querySelector(".f-geur");
+          if(we&&pos.wert!==undefined){we.value=pos.wert;we.dispatchEvent(new Event("input"));}
+          if(ge&&pos.gewinnEur!==undefined){ge.value=pos.gewinnEur;ge.dispatchEvent(new Event("input"));}
+          matched++;
+        }
+      });
+    });
+    if(statusEl){statusEl.style.color="var(--green)";statusEl.textContent=positions.length+" Positionen - "+matched+" Felder ausgefullt.";}
+    toast(matched+" Felder ausgefullt!");
+  } catch(e){toast("JSON ungultig: "+e.message,true);}
+}
+
+function importFromJSON() {
+  var ta = document.getElementById('json-paste');
+  var statusEl = document.getElementById('screenshot-status');
+  if(!ta||!ta.value.trim()){toast('Bitte JSON einfugen',true);return;}
+  try {
+    var text = ta.value.trim().split('```json').join('').split('```').join('').trim();
+    var positions = JSON.parse(text);
+    var matched = 0;
+    positions.forEach(function(pos){
+      var posName = (pos.name||'').toLowerCase();
+      document.querySelectorAll('.csv-row').forEach(function(tr){
+        var nc = tr.querySelector('td:first-child');
+        if(!nc) return;
+        var rowName = nc.textContent.trim().toLowerCase();
+        var words = rowName.split(' ').filter(function(w){return w.length>=4;});
+        var hit = words.some(function(w){return posName.indexOf(w)>=0;});
+        if(!hit&&pos.isin){var ic=tr.querySelector('td:nth-child(2)');if(ic&&ic.textContent.trim()===pos.isin)hit=true;}
+        if(hit){
+          var we=tr.querySelector('.f-wert'),ge=tr.querySelector('.f-geur');
+          if(we&&pos.wert!==undefined){we.value=pos.wert;we.dispatchEvent(new Event('input'));}
+          if(ge&&pos.gewinnEur!==undefined){ge.value=pos.gewinnEur;ge.dispatchEvent(new Event('input'));}
+          matched++;
+        }
+      });
+    });
+    if(statusEl){statusEl.style.color='var(--green)';statusEl.textContent=positions.length+' Positionen - '+matched+' Felder ausgefullt.';}
+    toast(matched+' Felder ausgefullt!');
+  } catch(e){toast('JSON ungultig: '+e.message,true);}
+}
+
+async function saveSnap() {
+  var date=document.getElementById('f-date').value;
+  var note=document.getElementById('f-note').value.trim();
+  if(!date){toast('Bitte Datum angeben',true);return;}
+  var etfs=[];
+  document.querySelectorAll('.csv-row').forEach(function(tr){
+    var isin=tr.getAttribute('data-isin');
+    var pos=CSV_IMPORT[isin]; if(!pos) return;
+    var wert=parseFloat(tr.querySelector('.f-wert').value);
+    if(isNaN(wert)||wert<=0) return;
+    // Use TR's absolute gewinnEur directly - most accurate
+    var gEurEl = tr.querySelector('.f-geur');
+    var gEur = gEurEl ? (parseFloat(gEurEl.value) || 0) : 0;
+    var gPct = (wert - gEur) > 0 ? gEur / (wert - gEur) * 100 : 0;
+    var today=new Date(); var fb=new Date(pos.firstBuy);
+    var monate=Math.round((today-fb)/(1000*60*60*24*30.44));
+    etfs.push({name:pos.name,isin:pos.isin,wert:Math.round(wert*100)/100,gewinnPct:Math.round(gPct*100)/100,gewinnEur:Math.round(gEur*100)/100,monate:monate,einstand:pos.einstand,netShares:pos.netShares,avgPrice:pos.avgPrice,firstBuy:pos.firstBuy,source:'csv'});
+  });
+  document.querySelectorAll('.manual-row').forEach(function(tr){
+    var name=tr.querySelector('.f-mn').value.trim();
+    var isin=tr.querySelector('.f-mi').value.trim().toUpperCase();
+    var wert=parseFloat(tr.querySelector('.f-mw').value);
+    var einstand=parseFloat(tr.querySelector('.f-me').value)||0;
+    var monate=parseInt(tr.querySelector('.f-mm').value)||0;
+    var firstBuy=tr.querySelector('.f-mf').value||'';
+    if(!name||!isin||isNaN(wert)||wert<=0) return;
+    var gEur=einstand>0?wert-einstand:0;
+    var gPct=einstand>0?gEur/einstand*100:0;
+    etfs.push({name:name,isin:isin,wert:Math.round(wert*100)/100,gewinnPct:Math.round(gPct*100)/100,gewinnEur:Math.round(gEur*100)/100,monate:monate,einstand:einstand,firstBuy:firstBuy,source:'manual'});
+  });
+  if(!etfs.length){toast('Bitte mindestens einen Wert eintragen',true);return;}
+  snapshots.push({date:date,note:note,etfs:etfs});
+  await persist();
+  toast('Snapshot gespeichert! ('+etfs.length+' Positionen)');
+  showTab('analyse');
+}
+
+async function handleCSV(file) {
+  var text=await file.text();
+  var lines=text.split('\n').filter(function(l){return l.trim();});
+  var headers=lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'');});
+  var positions={};
+  lines.slice(1).forEach(function(line){
+    var vals=[],cur='',inQ=false;
+    for(var ci=0;ci<line.length;ci++){var ch=line[ci];if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){vals.push(cur);cur='';}else{cur+=ch;}}
+    vals.push(cur);
+    var row={};
+    headers.forEach(function(h,i){row[h]=(vals[i]||'').trim().replace(/"/g,'');});
+    if(row.asset_class!=='FUND'||!row.symbol) return;
+    // Exclude sold/irrelevant positions
+    var IGNORE_ISINS = ['IE000I7E6HL0','IE000OJ5TQP4','IE00B4NCWG09','BTC'];
+    if(IGNORE_ISINS.indexOf(row.symbol)>=0) return;
+    if(!positions[row.symbol]) positions[row.symbol]={name:row.name,buys:[],sells:[]};
+    var sh=parseFloat(row.shares)||0,am=parseFloat(row.amount)||0,fe=parseFloat(row.fee)||0;
+    if(row.type==='BUY') positions[row.symbol].buys.push({shares:sh,amount:am,fee:fe,date:row.date});
+    if(row.type==='SELL') positions[row.symbol].sells.push({shares:sh,date:row.date});
+  });
+  var today=new Date(); var count=0;
+  Object.keys(positions).forEach(function(sym){
+    var pos=positions[sym];
+    var netSh=pos.buys.reduce(function(a,b){return a+b.shares;},0)+pos.sells.reduce(function(a,b){return a+b.shares;},0);
+    if(netSh<=0.001) return;
+    var totalCost=pos.buys.reduce(function(a,b){return a+Math.abs(b.amount)+Math.abs(b.fee);},0);
+    var totSh=pos.buys.reduce(function(a,b){return a+b.shares;},0);
+    // Correct: only count cost of REMAINING shares (after sells)
+    var einstand=totSh>0?totalCost*(netSh/totSh):0;
+    var avg=totSh>0?totalCost/totSh:0;
+    var fb=pos.buys.length?pos.buys.sort(function(a,b){return a.date.localeCompare(b.date);})[0].date.split('T')[0]:'';
+    var monate=fb?Math.round((today-new Date(fb))/(1000*60*60*24*30.44)):0;
+    CSV_IMPORT[sym]={isin:sym,name:(pos.name||sym).substring(0,35),netShares:Math.round(netSh*1e6)/1e6,einstand:Math.round(einstand*100)/100,avgPrice:Math.round(avg*100)/100,firstBuy:fb,monate:monate};
+    count++;
+  });
+  var st=document.getElementById('csv-status');
+  if(st) st.textContent='Import: '+new Date().toLocaleDateString('de-DE')+' · '+count+' Positionen';
+  toast('CSV importiert! '+count+' Positionen');
+  buildErfassenRows(snapshots.length?snapshots[snapshots.length-1]:null);
+}
+
+// ── VERLAUF ───────────────────────────────────────────────────────────
+function renderVerlauf() {
+  var el=document.getElementById('tab-verlauf');
+  if(!snapshots.length){el.innerHTML='<div class="no-data">Keine Snapshots.</div>';return;}
+  var h='';
+  var rev=snapshots.slice().reverse();
+  rev.forEach(function(snap,ri){
+    var i=snapshots.length-1-ri;
+    var c=calcSnap(snap);
+    var prev=i>0?calcSnap(snapshots[i-1]):null;
+    var delta=prev?c.total-prev.total:null;
+    h+='<div class="snap-card">';
+    h+='<div class="snap-head" style="flex-wrap:wrap;gap:6px"><div><div class="snap-date">'+snap.date+(snap.note?' · '+snap.note:'')+'</div>';
+    h+='<div style="font-size:10px;color:var(--muted);margin-top:2px">'+snap.etfs.length+' Positionen'+(delta!==null?' · <span class="'+(delta>=0?'delta-pos':'delta-neg')+'">'+fmtA(delta)+'</span>':'')+'</div></div>';
+    h+='<div style="text-align:right"><div class="snap-total">'+fmt(c.total)+'</div><div style="font-size:10px;color:var(--muted)">S1: '+c.s1pct.toFixed(1)+'% · S2: '+c.s2pct.toFixed(1)+'%</div></div></div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">';
+    h+='<div><div style="font-size:9px;color:var(--muted)">Brutto-Gewinn</div><div class="c-green" style="font-weight:600">+'+fmt(c.gewinnEur)+'</div></div>';
+    h+='<div><div style="font-size:9px;color:var(--muted)">Steuer</div><div style="color:var(--warn)">−'+fmt(c.steuer)+'</div></div>';
+    h+='<div><div style="font-size:9px;color:var(--muted)">Netto</div><div class="c-green" style="font-weight:600">+'+fmt(c.netto)+'</div></div></div>';
+    h+='<div class="snap-pills">';
+    snap.etfs.forEach(function(e){h+='<div class="pill">'+e.name+': <strong>'+fmt(e.wert)+'</strong> <span class="c-green">+'+(e.gewinnPct||0).toFixed(1)+'%</span></div>';});
+    h+='</div>';
+    h+='<div style="text-align:right;margin-top:8px"><button class="btn-danger-sm del-snap" data-idx="'+i+'">Loeschen</button></div>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+// ── EVENT DELEGATION ──────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  // Rendite toggle
+  var toggle = e.target.closest('#rendite-toggle');
+  if(toggle) {
+    var body = document.getElementById('rendite-body');
+    var chevron = document.getElementById('rendite-chevron');
+    if(body) {
+      var open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      if(chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+    }
+    return;
+  }
+
+  var tab=e.target.closest('[data-tab]');
+  if(tab){showTab(tab.getAttribute('data-tab'));return;}
+
+  var period=e.target.closest('[data-period]');
+  if(period){activePeriod=parseInt(period.getAttribute('data-period'));renderEntwicklung();return;}
+
+  var action=e.target.closest('[data-action]');
+  if(action){
+    var act=action.getAttribute('data-action');
+    var pl=action.getAttribute('data-plabel');
+    if(act==='saveManual'){
+      if(!manualData[pl]) manualData[pl]={};
+      document.querySelectorAll('.manual-inp').forEach(function(inp){var v=parseFloat(inp.value);if(!isNaN(v)) manualData[pl][inp.getAttribute('data-isin')]=v;});
+      saveManual(); toast('Gespeichert!'); renderEntwicklung(); return;
+    }
+    if(act==='clearManual'){delete manualData[pl];saveManual();renderEntwicklung();return;}
+    if(act==='remove-row'){e.target.closest('tr').remove();return;}
+  }
+
+  if(e.target.id==='btn-import-json'){importFromJSON();return;}
+  if(e.target.id==='btn-save-snap'){saveSnap();return;}
+  if(e.target.id==='btn-add-row'){addManualRow();return;}
+  if(e.target.id==='dist-equal'){
+    distMode='equal';
+    var de=document.getElementById('dist-equal'),dp=document.getElementById('dist-prop');
+    if(de){de.style.background='var(--accent)';de.style.color='#fff';}
+    if(dp){dp.style.background='var(--surface2)';dp.style.color='var(--muted)';}
+    var sn=snapshots.length?snapshots[snapshots.length-1]:null;
+    if(sn) updateSim(sn.etfs); return;
+  }
+  if(e.target.id==='dist-prop'){
+    distMode='prop';
+    var de2=document.getElementById('dist-equal'),dp2=document.getElementById('dist-prop');
+    if(de2){de2.style.background='var(--surface2)';de2.style.color='var(--muted)';}
+    if(dp2){dp2.style.background='var(--accent)';dp2.style.color='#fff';}
+    var sn2=snapshots.length?snapshots[snapshots.length-1]:null;
+    if(sn2) updateSim(sn2.etfs); return;
+  }
+  if(e.target.classList.contains('del-snap')){
+    var idx=parseInt(e.target.getAttribute('data-idx'));
+    if(confirm('Snapshot loeschen?')){snapshots.splice(idx,1);persist();renderVerlauf();}
+    return;
+  }
+});
+
+document.addEventListener('change', function(e) {
+  if(e.target.id==='csv-upload'&&e.target.files.length) handleCSV(e.target.files[0]);
+  if(e.target.id==='screenshot-upload'&&e.target.files.length) handleScreenshot(e.target.files[0]);
+  if(e.target.classList.contains('sim-prio')||e.target.classList.contains('clim')){
+    var sn=snapshots.length?snapshots[snapshots.length-1]:null;
+    if(sn) updateSim(sn.etfs);
+  }
+});
+
+document.addEventListener('input', function(e) {
+  if(e.target.id==='sim-total'||e.target.classList.contains('sim-prio')||e.target.classList.contains('clim')){
+    var sn=snapshots.length?snapshots[snapshots.length-1]:null;
+    if(sn) updateSim(sn.etfs);
+  }
+  if(e.target.classList.contains('f-wert')||e.target.classList.contains('f-geur')){
+    var isin=e.target.getAttribute('data-isin');
+    var wertEl=document.querySelector('.f-wert[data-isin="'+isin+'"]');
+    var geurEl=document.querySelector('.f-geur[data-isin="'+isin+'"]');
+    var hint=document.querySelector('.calc-hint[data-isin="'+isin+'"]');
+    if(!wertEl||!geurEl||!hint) return;
+    var wert=parseFloat(wertEl.value); var gEur=parseFloat(geurEl.value);
+    if(isNaN(wert)||isNaN(gEur)) return;
+    var einstand=wert-gEur;
+    var pct=einstand>0?gEur/einstand*100:0;
+    hint.style.color=gEur>=0?'var(--green)':'var(--danger)';
+    hint.textContent=(gEur>=0?'+':'')+gEur.toFixed(2)+'EUR ('+pct.toFixed(2)+'%) · Einstand ~'+Math.round(einstand)+'EUR';
+  }
+});
+
+// ── STORAGE RESET BUTTON ──────────────────────────────────────────────
+function handleStorageReset() {
+  var btn = document.getElementById('btn-storage-reset');
+  var status = document.getElementById('storage-reset-status');
+  if(!confirm('ETF-Aktualisierungsstempel aus localStorage löschen und Tracker neu laden?\n\nDeine Snapshots und manuellen Daten bleiben erhalten.')) return;
+  if(btn) { btn.disabled = true; btn.textContent = 'Wird gelöscht...'; }
+  try {
+    localStorage.removeItem('ptv16dataUpdated');
+    if(status) status.textContent = 'Stempel gelöscht – lade neu...';
+    setTimeout(function(){ location.reload(); }, 600);
+  } catch(e) {
+    if(status) status.textContent = 'Fehler: ' + e.message;
+    if(btn) { btn.disabled = false; btn.textContent = '⚠ Storage reparieren'; }
+  }
+}
+
+// ── ETF UPDATE BUTTON ─────────────────────────────────────────────────
+function handleEtfUpdate() {
+  var btn = document.getElementById('btn-etf-update');
+  var status = document.getElementById('etf-update-status');
+  if(btn) { btn.disabled = true; btn.textContent = 'Gespeichert...'; }
+  markDataUpdated().then(function(){
+    var now = new Date();
+    if(status) status.textContent = 'Zuletzt aktualisiert: ' + now.toLocaleDateString('de-DE');
+    var bannerEl = document.getElementById('data-freshness-banner');
+    if(bannerEl) bannerEl.style.display = 'none';
+    if(btn) { btn.disabled = false; btn.textContent = '&#8635; ETF-Daten aktualisiert'; }
+    toast('ETF-Datum gespeichert: ' + now.toLocaleDateString('de-DE'));
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+// Versioniertes Datum der eingebetteten ETF-Daten (COUNTRY/SECTORS/HOLDINGS)
+var EMBEDDED_DATA_DATE = '2026-10-10T09:00:00.000Z';
+
+Promise.all([loadData(),loadManual()]).then(function(){
+  // Setze Data-Timestamp falls nicht vorhanden oder älter als eingebettetes Datum
+  getDataAge().then(function(existing){
+    var embedded = new Date(EMBEDDED_DATA_DATE);
+    if(!existing || existing < embedded){
+      markDataUpdated();
+    }
+  });
+  renderAnalyse();
+}).catch(function(){
+  snapshots=JSON.parse(JSON.stringify(SNAPSHOTS_DEFAULT));
+  renderAnalyse();
+});
+</script>
+</body>
+</html>
