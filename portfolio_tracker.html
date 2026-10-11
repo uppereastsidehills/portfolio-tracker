@@ -271,6 +271,7 @@ tr:last-child td{border-bottom:none;}
     <div id="etf-update-status" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
   </div>
 </div>
+<div id="sb-status-bar" style="margin:2px 12px 0;text-align:right;font-size:10px;color:var(--muted)">&#9679; Cloud: prüfe...</div>
 <div id="tab-entwicklung" class="page"></div>
 <div id="tab-vergleich" class="page"></div>
 <div id="tab-simulation" class="page"></div>
@@ -461,15 +462,50 @@ var manualData = {};
 var distMode = 'equal';
 var activePeriod = 0;
 
-// ── STORAGE ──────────────────────────────────────────────────────────
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────
+var SB_URL  = 'https://pspunjmuajecntbgusoa.supabase.co';
+var SB_KEY  = 'sb_publishable_SVGVDMDhm-j2MuebMY1RGQ_n-lKyf0U';
+var SB_USER = 'dave'; // fester Bezeichner, kein Login nötig
+
+async function sbGet(key) {
+  try {
+    var res = await fetch(SB_URL+'/rest/v1/kv?user_id=eq.'+encodeURIComponent(SB_USER)+'&key=eq.'+encodeURIComponent(key)+'&select=value', {
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
+    });
+    if(!res.ok) return null;
+    var rows = await res.json();
+    return (rows && rows.length) ? rows[0].value : null;
+  } catch(e){ return null; }
+}
+
+async function sbSet(key, val) {
+  try {
+    await fetch(SB_URL+'/rest/v1/kv', {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body: JSON.stringify({user_id: SB_USER, key: key, value: val, updated_at: new Date().toISOString()})
+    });
+  } catch(e){}
+}
+
+// ── STORAGE (Supabase → localStorage Fallback) ────────────────────────
 async function sGet(key) {
-  try { if(window.storage && window.storage.get) { var r=await window.storage.get(key); if(r&&r.value) return r.value; } } catch(e){}
+  // 1) Supabase (cross-device)
+  var sbVal = await sbGet(key);
+  if(sbVal !== null) {
+    // Cache lokal für Offline
+    try { localStorage.setItem(key, sbVal); } catch(e){}
+    return sbVal;
+  }
+  // 2) Lokaler Cache / Offline
   try { return localStorage.getItem(key); } catch(e){}
   return null;
 }
-async function sSet(key,val) {
-  try { if(window.storage && window.storage.set) { await window.storage.set(key,val); return; } } catch(e){}
-  try { localStorage.setItem(key,val); } catch(e){}
+
+async function sSet(key, val) {
+  // Immer in beide schreiben
+  try { localStorage.setItem(key, val); } catch(e){}
+  await sbSet(key, val);
 }
 // All historical storage keys - never remove old ones, only add new
 var ALL_SNAP_KEYS = [
@@ -2101,9 +2137,32 @@ function handleEtfUpdate() {
   });
 }
 
+// ── SUPABASE STATUS CHECK ─────────────────────────────────────────────
+async function checkSbStatus() {
+  var bar = document.getElementById('sb-status-bar');
+  if(!bar) return;
+  try {
+    var res = await fetch(SB_URL+'/rest/v1/kv?limit=1', {
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    if(res.ok) {
+      bar.innerHTML = '<span style="color:var(--green)">&#9679;</span> Cloud: verbunden';
+    } else if(res.status === 404 || res.status === 400) {
+      // Tabelle fehlt noch
+      bar.innerHTML = '<span style="color:var(--warn)">&#9679;</span> Cloud: Tabelle fehlt &ndash; siehe Einrichtung';
+    } else {
+      bar.innerHTML = '<span style="color:var(--danger)">&#9679;</span> Cloud: Fehler '+res.status;
+    }
+  } catch(e) {
+    bar.innerHTML = '<span style="color:var(--muted)">&#9679;</span> Cloud: offline (lokaler Modus)';
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────
 // Versioniertes Datum der eingebetteten ETF-Daten (COUNTRY/SECTORS/HOLDINGS)
 var EMBEDDED_DATA_DATE = '2026-10-10T09:00:00.000Z';
+
+checkSbStatus();
 
 Promise.all([loadData(),loadManual()]).then(function(){
   // Setze Data-Timestamp falls nicht vorhanden oder älter als eingebettetes Datum
