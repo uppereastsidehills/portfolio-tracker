@@ -467,25 +467,36 @@ var SB_URL  = 'https://pspunjmuajecntbgusoa.supabase.co';
 var SB_KEY  = 'sb_publishable_SVGVDMDhm-j2MuebMY1RGQ_n-lKyf0U';
 var SB_USER = 'dave'; // fester Bezeichner, kein Login nötig
 
+function sbHeaders(extra) {
+  var h = {'apikey':SB_KEY,'Content-Type':'application/json'};
+  if(extra) Object.assign(h, extra);
+  return h;
+}
+
 async function sbGet(key) {
   try {
-    var res = await fetch(SB_URL+'/rest/v1/kv?user_id=eq.'+encodeURIComponent(SB_USER)+'&key=eq.'+encodeURIComponent(key)+'&select=value', {
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
-    });
-    if(!res.ok) return null;
+    var res = await fetch(
+      SB_URL+'/rest/v1/kv?user_id=eq.'+encodeURIComponent(SB_USER)+'&key=eq.'+encodeURIComponent(key)+'&select=value',
+      {headers: sbHeaders()}
+    );
+    if(!res.ok) { console.warn('sbGet status', res.status); return null; }
     var rows = await res.json();
     return (rows && rows.length) ? rows[0].value : null;
-  } catch(e){ return null; }
+  } catch(e){ console.warn('sbGet error', e); return null; }
 }
 
 async function sbSet(key, val) {
   try {
-    await fetch(SB_URL+'/rest/v1/kv', {
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+    var res = await fetch(SB_URL+'/rest/v1/kv', {
+      method: 'POST',
+      headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
       body: JSON.stringify({user_id: SB_USER, key: key, value: val, updated_at: new Date().toISOString()})
     });
-  } catch(e){}
+    if(!res.ok) {
+      var txt = await res.text();
+      console.warn('sbSet status', res.status, txt);
+    }
+  } catch(e){ console.warn('sbSet error', e); }
 }
 
 // ── STORAGE (Supabase → localStorage Fallback) ────────────────────────
@@ -2142,16 +2153,23 @@ async function checkSbStatus() {
   var bar = document.getElementById('sb-status-bar');
   if(!bar) return;
   try {
-    var res = await fetch(SB_URL+'/rest/v1/kv?limit=1', {
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    // Test-Write + Read um sicherzustellen dass beide Richtungen funktionieren
+    var testRes = await fetch(SB_URL+'/rest/v1/kv', {
+      method:'POST',
+      headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
+      body: JSON.stringify({user_id: SB_USER, key:'__ping__', value:'1', updated_at: new Date().toISOString()})
     });
-    if(res.ok) {
-      bar.innerHTML = '<span style="color:var(--green)">&#9679;</span> Cloud: verbunden';
-    } else if(res.status === 404 || res.status === 400) {
-      // Tabelle fehlt noch
-      bar.innerHTML = '<span style="color:var(--warn)">&#9679;</span> Cloud: Tabelle fehlt &ndash; siehe Einrichtung';
+    if(testRes.ok || testRes.status === 201) {
+      bar.innerHTML = '<span style="color:var(--green)">&#9679;</span> Cloud: verbunden &amp; schreibbereit';
+    } else if(testRes.status === 404 || testRes.status === 400) {
+      var errTxt = await testRes.text().catch(function(){return '';});
+      if(errTxt.indexOf('does not exist') > -1 || errTxt.indexOf('relation') > -1) {
+        bar.innerHTML = '<span style="color:var(--warn)">&#9679;</span> Cloud: Tabelle fehlt &ndash; SQL im Setup ausf&uuml;hren';
+      } else {
+        bar.innerHTML = '<span style="color:var(--warn)">&#9679;</span> Cloud: Fehler '+testRes.status+' &ndash; '+errTxt.substring(0,60);
+      }
     } else {
-      bar.innerHTML = '<span style="color:var(--danger)">&#9679;</span> Cloud: Fehler '+res.status;
+      bar.innerHTML = '<span style="color:var(--danger)">&#9679;</span> Cloud: Fehler '+testRes.status;
     }
   } catch(e) {
     bar.innerHTML = '<span style="color:var(--muted)">&#9679;</span> Cloud: offline (lokaler Modus)';
